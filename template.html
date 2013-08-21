@@ -1,0 +1,37 @@
+<html>
+	<head>
+
+		<script type="text/javascript" src="vis.js"></script>
+
+		<style>
+
+			canvas {
+				display: block;
+				margin: auto;
+			}
+
+		</style>
+
+	</head>
+	<body>
+
+		<canvas id="testCanvas"></canvas>
+
+	</body>
+
+	<script>
+
+		VIS.install();
+
+		setCanvas(document.getElementById("testCanvas"));
+
+		size(500, 500);
+
+		background(40, 40, 40);
+
+		fill(125, 175, 195);
+
+		rect(100, 100, 75, 100);
+
+	</script>
+</html>
