@@ -28,6 +28,7 @@
 
 	function internalSetup() {
 		if (typeof setup !== "undefined") setup();
+		if (typeof click !== "undefined") document.addEventListener("click", click);
 
 		// TODO: have this wait until all scripts have finished loading
 
@@ -71,6 +72,10 @@
 	};
 
 	/*** DRAW SETTINGS ***/
+	VIS.clear = function() {
+		ctx.clearRect(0, 0, VIS.width, VIS.height);
+	};
+
 	VIS.background = function(r, g, b) {
 		if (arguments.length === 1) g = b = r;
 		var _fill = ctx.fillStyle;
@@ -85,7 +90,7 @@
 		VIS.stroke = true;
 	};
 
-	VIS.lineWidth = function(w) {
+	VIS.strokeWidth = function(w) {
 		ctx.lineWidth = w;
 	};
 
@@ -126,6 +131,14 @@
 	};
 
 	/*** SHAPE PRIMITIVES ***/
+	VIS.line = function(x1, y1, x2, y2) {
+		if (arguments.length === 2) x2 = y1.x, y2 = y1.y, y1 = x1.y, x1 = x1.x;
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		if (VIS.stroke) ctx.stroke();
+	};
+
 	VIS.rect = function(x, y, w, h) {
 		if (VIS.stroke) ctx.strokeRect(x, y, w, h);
 		if (VIS.fill) ctx.fillRect(x, y, w, h);
@@ -188,6 +201,7 @@
 		return proto;
 	})();
 
+	/*** DRAWING CLASSES ***/
 	VIS.Particle = function(loc, vel, acc) {
 		this.loc = loc;
 		this.vel = vel;
@@ -250,6 +264,33 @@
 		return proto;
 	})();
 
+	VIS.Polygon = function() {
+		this.vertices = [];
+	};
+
+	VIS.Polygon.prototype = (function() {
+		var proto = {};
+
+		proto.vertex = function(x, y) {
+			if (arguments.length === 1) this.vertices.push(x);
+			else this.vertices.push(new Point(x, y));
+		};
+
+		proto.draw = function() {
+			ctx.beginPath();
+			ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
+			for (var i = 1, l = this.vertices.length; i < l; ++i) {
+				ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
+			};
+			ctx.closePath();
+			if (VIS.stroke) ctx.stroke();
+			if (VIS.fill) ctx.fill();
+		};
+
+		return proto;
+	})();
+
+
 	/*** COLOR UTILITIES ***/
 	VIS.rgbToHex = function(r, g, b) {
 		r = r.toString(16), g = g.toString(16), b = b.toString(16);
@@ -261,7 +302,8 @@
 
 	/*** UTILITIES ***/
 	VIS.random = function(low, high) {
-		if (arguments.length === 1) high = low, low = 0;
+		if (arguments.length === 0) return Math.random();
+		else if (arguments.length === 1) high = low, low = 0;
 		return Math.random() * (high - low) + low;
 	};
 
