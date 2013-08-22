@@ -20,18 +20,71 @@
 	</body>
 
 	<script>
-
+		// test script
+		
 		VIS.install();
-
 		setCanvas(document.getElementById("testCanvas"));
 
 		size(500, 500);
 
-		background(40, 40, 40);
-
 		fill(125, 175, 195);
+		lineWidth(10);
+		lineCap("round");
+		lineJoin("round");
 
-		rect(100, 100, 75, 100);
+		var a;
+		var b;
+		var c;
+		var testTriangle;
+		var testPts = [];
+		var spawnRate = 4;
+
+		function randomParticle() {
+			var loc = new Vec2D(width / 2, height / 2);
+			var dir = random(0, TWO_PI);
+			var vel = new Vec2D(Math.cos(dir), Math.sin(dir));
+			var acc = new Vec2D(0, 0);
+			return new Particle(loc, vel, acc);
+		}
+
+		function setup() {
+			a = new Point(random(0, width), random(0, height));
+			b = new Point(random(0, width), random(0, height));
+			c = new Point(random(0, width), random(0, height));
+			testTriangle = new Triangle(a, b, c);
+
+			for (var i = 0, l = 100; i < l; ++i) {
+				testPts.push(randomParticle());
+			}
+		}
+
+		function update() {
+			for (var i = testPts.length - 1; i >= 0; --i) {
+				testPts[i].update();
+				if (!testPts[i].inView()) testPts.splice(i, 1);
+			}
+		}
+
+		function draw() {
+			stroke(195, 175, 125);
+
+			background(40, 40, 40);
+			rect(100, 100, 75, 100);
+			triangle(300, 300, 400, 300, 350, 400);
+
+			circle(150, 400, 40);
+
+			noStroke();
+
+			for (var i = 0, l = spawnRate; i < l; ++i) {
+				testPts.push(randomParticle());
+			}
+
+			for (var i = 0, l = testPts.length; i < l; ++i) {
+				testPts[i].draw();
+			}
+
+		}
 
 	</script>
 </html>
