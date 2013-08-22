@@ -60,7 +60,7 @@
 				poly.vertex(0, polyY);
 				for (var j = 1; j < polySubdivisions; ++j) {
 					polyX = j * subDivWidth;
-					rand = adjustedRandom(polyX) * scaleFactor(polyX);
+					rand = random() * scaleFactor(polyX);
 					poly.vertex(polyX, polyY - rand);
 				}
 				poly.vertex(width, polyY);
@@ -77,15 +77,6 @@
 			else if (frac < 0.55) return 35;
 			else if (frac < 0.75) return 15;
 			else return 5;
-		}
-
-		function adjustedRandom(x) {
-			var frac = x / width;
-			if (frac < 0.25) return random();
-			else if (frac < 0.45) return random() - 0.4;
-			else if (frac < 0.55) return random();
-			else if (frac < 0.75) return random() + 0.4;
-			else return random();
 		}
 
 		function click(e) {
