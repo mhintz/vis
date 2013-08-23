@@ -33,22 +33,10 @@
 		internalSetup();
 	}
 
-	if (typeof root.onmousemove !== undefined) {
-		var _mousemove = root.onmousemove;
-		root.onmousemove = function(e) {
-			if (typeof _mousemove === "function") _mousemove();
-			VIS.mouseX = e.clientX;
-			VIS.mouseY = e.clientY;
-			if (VIS._installed) {
-				root.mouseX = e.clientX;
-				root.mouseY = e.clientY;
-			}
-		}
-	}
-
 	function internalSetup() {
 		if (typeof setup !== "undefined") setup();
 		if (typeof click !== "undefined") document.addEventListener("click", click);
+		document.addEventListener("mousemove", setMousePos);
 		if (typeof move !== "undefined") document.addEventListener("mousemove", move);
 
 		// TODO: have this wait until all scripts have finished loading
@@ -65,6 +53,15 @@
 		// TODO: throttle loop speed to some framerate
 
 		requestAnimationFrame(internalLoop);
+	}
+
+	function setMousePos(e) {
+		VIS.mouseX = e.clientX;
+		VIS.mouseY = e.clientY;
+		if (VIS._installed) {
+			root.mouseX = e.clientX;
+			root.mouseY = e.clientY;
+		}
 	}
 
 	/*** SETUP ***/
@@ -191,7 +188,7 @@
 
 	VIS.circle = function(x, y, r) {
 		ctx.beginPath();
-		ctx.moveTo(x, y);
+		ctx.moveTo(x + r, y);
 		ctx.arc(x, y, r, 0, VIS.TWO_PI);
 		if (VIS._stroke) ctx.stroke();
 		if (VIS._fill) ctx.fill();
@@ -341,6 +338,7 @@
 		return Math.random() * (high - low) + low;
 	};
 
+	// TODO: implement 2-d and 3-d perlin simplex noise function
 	VIS.noise = function(x, y, z) {
 		if (arguments.length === 2) return perlin2D(x, y);
 		if (arguments.length === 3) return perlin3D(x, y, z);
