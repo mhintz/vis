@@ -41,7 +41,7 @@
 		};
 		var rows = 30;
 		var overlap = 3.5;
-		var strWid = 3.5;
+		var strWid = 2;
 		strokeWidth(strWid);
 		var spaceHeight = (height - margin.top) / rows;
 		var maxPolyHeight = spaceHeight * overlap;
@@ -55,16 +55,16 @@
 			var rand;
 			for (var i = 0; i < rows; ++i) {
 				poly = new Polygon();
-				poly.vertex(-strWid, height + strWid);
+				poly.vertex(-5, height + 5);
 				polyY = i * spaceHeight + margin.top;
-				poly.vertex(0, polyY);
+				poly.vertex(-5, polyY);
 				for (var j = 1; j < polySubdivisions; ++j) {
 					polyX = j * subDivWidth;
 					rand = random() * scaleFactor(polyX);
 					poly.vertex(polyX, polyY - rand);
 				}
-				poly.vertex(width, polyY);
-				poly.vertex(width + strWid, height + strWid);
+				poly.vertex(width + 5, polyY);
+				poly.vertex(width + 5, height + 5);
 				
 				poly.draw();
 			}
