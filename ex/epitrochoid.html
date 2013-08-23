@@ -1,7 +1,7 @@
 <html>
 	<head>
 
-		<script type="text/javascript" src="vis.js"></script>
+		<script type="text/javascript" src="../vis.js"></script>
 
 		<style>
 
@@ -32,15 +32,11 @@
 		size(document.width - 16, document.height - 16);
 
 		// settings
-		var ioRatio = {
-			val: 1,
-			bound: [0, 2]
-		};
-		var ptRatio = {
-			val: 1,
-			bound: [0, 2]
-		};
-		var size = height / 4;
+		var ioRatio = 1
+		var ioBound = [0, 2];
+		var ptRatio = 1;
+		var ptBound = [0, 2];
+		var size = height / 2 - 16;
 
 		var innerR;
 		var outerR;
@@ -50,16 +46,19 @@
 
 		calculateDim();
 
-		// innerR + outerR = size; outerR / innerR = ioRatio.val;
+		// innerR + outerR + ptR = size;
+		// outerR / innerR = ioRatio;
+		// ptR / outerR = ptRatio;
 		function calculateDim() {
-			innerR = size / (1 + ioRatio.val);
-			outerR = size - innerR;
-			ptR = outerR * ptRatio.val;
+			innerR = size / (1 + ioRatio + (ioRatio * ptRatio));
+			outerR = innerR * ioRatio;
+			ptR = outerR * ptRatio;
 		}
 
 		function move(e) {
-			ioRatio.val = ioRatio.bound[0] + (ioRatio.bound[1] - ioRatio.bound[0]) * (mouseX / width);
-			ptRatio.val = ptRatio.bound[0] + (ptRatio.bound[1] - ptRatio.bound[0]) * (mouseY / height);
+			ioRatio = ioBound[0] + (ioBound[1] - ioBound[0]) * (mouseX / width);
+			ptRatio = ptBound[0] + (ptBound[1] - ptBound[0]) * (mouseY / height);
+
 			calculateDim();
 
 			setup();
