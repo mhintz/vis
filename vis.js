@@ -3,8 +3,15 @@
 	/*** INTERNALS ***/
 	var VIS = {
 		_version: "0.0.1",
+		_installed: false,
+		_isLooping: true,
+		_stroke: false,
+		_fill: false,
 		width: 0,
 		height: 0,
+		mouseX: 0,
+		mouseY: 0,
+		PI: Math.PI,
 		TWO_PI: 2 * Math.PI
 	};
 
@@ -26,9 +33,23 @@
 		internalSetup();
 	}
 
+	if (typeof root.onmousemove !== undefined) {
+		var _mousemove = root.onmousemove;
+		root.onmousemove = function(e) {
+			if (typeof _mousemove === "function") _mousemove();
+			VIS.mouseX = e.clientX;
+			VIS.mouseY = e.clientY;
+			if (VIS._installed) {
+				root.mouseX = e.clientX;
+				root.mouseY = e.clientY;
+			}
+		}
+	}
+
 	function internalSetup() {
 		if (typeof setup !== "undefined") setup();
 		if (typeof click !== "undefined") document.addEventListener("click", click);
+		if (typeof move !== "undefined") document.addEventListener("mousemove", move);
 
 		// TODO: have this wait until all scripts have finished loading
 
@@ -36,8 +57,10 @@
 	}
 
 	function internalLoop() {
-		if (typeof update !== "undefined") update();
-		if (typeof draw !== "undefined") draw();
+		if (VIS._isLooping) {
+			if (typeof update !== "undefined") update();
+			if (typeof draw !== "undefined") draw();			
+		}
 
 		// TODO: throttle loop speed to some framerate
 
@@ -51,6 +74,7 @@
 				root[name] = VIS[name];
 			}
 		}
+		VIS._installed = true;
 	};
 
 	VIS.setCanvas = function(newCanvas) {
@@ -65,10 +89,20 @@
 	VIS.size = function(width, height) {
 		VIS.width = width;
 		canvas.setAttribute("width", width);
-		root.width = width;
 		VIS.height = height;
 		canvas.setAttribute("height", height);
-		root.height = height;
+		if (VIS._installed) {
+			root.width = width;
+			root.height = height;			
+		}
+	};
+
+	VIS.loop = function() {
+		VIS._isLooping = true;
+	};
+
+	VIS.noLoop = function() {
+		VIS._isLooping = false;
 	};
 
 	/*** DRAW SETTINGS ***/
@@ -87,7 +121,7 @@
 	VIS.stroke = function(r, g, b) {
 		if (arguments.length === 1) g = b = r;
 		ctx.strokeStyle = VIS.rgbToHex(r, g, b);
-		VIS.stroke = true;
+		VIS._stroke = true;
 	};
 
 	VIS.strokeWidth = function(w) {
@@ -116,18 +150,18 @@
 
 	VIS.noStroke = function() {
 		ctx.strokeStyle = "";
-		VIS.stroke = false;
+		VIS._stroke = false;
 	};
 
 	VIS.fill = function(r, g, b) {
 		if (arguments.length === 1) g = b = r;
 		ctx.fillStyle = VIS.rgbToHex(r, g, b);
-		VIS.fill = true;
+		VIS._fill = true;
 	};
 
 	VIS.noFill = function() {
 		ctx.fillStyle = "";
-		VIS.fill = false;
+		VIS._fill = false;
 	};
 
 	/*** SHAPE PRIMITIVES ***/
@@ -136,12 +170,12 @@
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
 		ctx.lineTo(x2, y2);
-		if (VIS.stroke) ctx.stroke();
+		if (VIS._stroke) ctx.stroke();
 	};
 
 	VIS.rect = function(x, y, w, h) {
-		if (VIS.stroke) ctx.strokeRect(x, y, w, h);
-		if (VIS.fill) ctx.fillRect(x, y, w, h);
+		if (VIS._stroke) ctx.strokeRect(x, y, w, h);
+		if (VIS._fill) ctx.fillRect(x, y, w, h);
 		else ctx.rect(x, y, w, h);
 	};
 
@@ -151,16 +185,16 @@
 		ctx.lineTo(x2, y2);
 		ctx.lineTo(x3, y3);
 		ctx.lineTo(x1, y1);
-		if (VIS.stroke) ctx.stroke();
-		if (VIS.fill) ctx.fill();
+		if (VIS._stroke) ctx.stroke();
+		if (VIS._fill) ctx.fill();
 	};
 
 	VIS.circle = function(x, y, r) {
 		ctx.beginPath();
 		ctx.moveTo(x, y);
 		ctx.arc(x, y, r, 0, VIS.TWO_PI);
-		if (VIS.stroke) ctx.stroke();
-		if (VIS.fill) ctx.fill();
+		if (VIS._stroke) ctx.stroke();
+		if (VIS._fill) ctx.fill();
 	};
 
 	/*** DATA CLASSES ***/
@@ -276,15 +310,15 @@
 			else this.vertices.push(new Point(x, y));
 		};
 
-		proto.draw = function() {
+		proto.draw = function(open) {
 			ctx.beginPath();
 			ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
 			for (var i = 1, l = this.vertices.length; i < l; ++i) {
 				ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
 			};
-			ctx.closePath();
-			if (VIS.stroke) ctx.stroke();
-			if (VIS.fill) ctx.fill();
+			if (open !== "open") ctx.closePath();
+			if (VIS._stroke) ctx.stroke();
+			if (VIS._fill) ctx.fill();
 		};
 
 		return proto;
@@ -307,6 +341,17 @@
 		return Math.random() * (high - low) + low;
 	};
 
+	VIS.noise = function(x, y, z) {
+		if (arguments.length === 2) return perlin2D(x, y);
+		if (arguments.length === 3) return perlin3D(x, y, z);
+	};
 
+	function perlin2D(x, y) {
+
+	}
+
+	function perlin3D(x, y, z) {
+
+	}
 
 })(this);
