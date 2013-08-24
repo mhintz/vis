@@ -324,6 +324,30 @@
 		return proto;
 	})();
 
+	/*** PIXEL MANUPULATION ***/
+	VIS.ImageData = function(x, y, w, h) {
+		if (typeof x === "undefined") this.x = 0;
+		if (typeof y === "undefined") this.y = 0;
+		if (typeof w === "undefined") this.w = VIS.width;
+		if (typeof h === "undefined") this.h = VIS.height;
+		this.data = ctx.getImageData(this.x, this.y, this.w, this.h);
+	};
+
+	VIS.ImageData.newImage = function(width, height) {
+		return ctx.createImageData(width, height);
+	};
+
+	VIS.ImageData.prototype = (function() {
+		var api = {};
+
+		api.setData = function(data, x, y) {
+			if (typeof x === "undefined") x = 0;
+			if (typeof y === "undefined") y = 0;
+			ctx.putImageData(data, x, y);
+		};
+
+		return api;
+	})();
 
 	/*** COLOR UTILITIES ***/
 	VIS.rgbToHex = function(r, g, b) {

@@ -1,0 +1,93 @@
+<html>
+	<head>
+
+		<script type="text/javascript" src="../vis.js"></script>
+
+		<style>
+
+			body {
+				background-color: #000;	
+			}
+
+			canvas {
+				display: block;
+				margin: auto;
+			}
+
+		</style>
+
+	</head>
+	<body>
+
+		<canvas id="testCanvas"></canvas>
+
+	</body>
+
+	<script>
+		// sketch code goes here
+		// work on a fire algorithm, as explained HERE: http://www.gamedev.net/page/resources/_/technical/graphics-programming-and-theory/simple-fire-effect-r222
+		// AND HERE: https://www.google.com/search?q=fire+algorithm&oq=fire+algorithm&aqs=chrome..69i57j0l3.1783j0&sourceid=chrome&ie=UTF-8
+
+		VIS.install();
+		setCanvas(document.getElementById("testCanvas"));
+
+		size(600, 600);
+
+		var pic;
+		var canvasImage = new ImageData();
+
+		var paused = false;
+		function stop() {
+			paused = true;
+		}
+		function play() {
+			paused = false;
+		}
+
+		function avg() {
+			var avg = 0;
+			for (var i = 0, l = arguments.length; i < l; ++i) {
+				avg += arguments[i] / l;
+			}
+			return avg;
+		}
+
+		function interpolate(c) {
+
+		}
+
+		function update() {
+			if (!paused) {
+
+				pic = ImageData.newImage(width, height);
+
+				var rowLen = width * 4;
+				for (var i = pic.data.length - 1, end = i - rowLen; i > end; i -= 4) {
+					pic.data[i] = 255;
+					pic.data[i - 1] = random(0, 50);
+					pic.data[i - 2] = random(180, 200);
+					pic.data[i - 3] = random(200, 255);
+				}
+
+				var l, r, b;
+				for (; i >= 0; i -= 4) {
+					pic.data[i] = 255;
+					for (var j = 1; j <= 3; ++j) {
+						l = pic.data[i - j + rowLen - 4] || 0;
+						r = pic.data[i - j + rowLen + 4] || 0;
+						b = pic.data[i - j + rowLen];
+						pic.data[i - j] = Math.floor(avg(l, r, b));
+					}
+				}
+
+			}
+		}
+
+		function draw() {
+			if (!paused) {
+				canvasImage.setData(pic);
+			}
+		}
+
+	</script>
+</html>
