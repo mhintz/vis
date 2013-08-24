@@ -52,10 +52,6 @@
 			return avg;
 		}
 
-		function interpolate(c) {
-
-		}
-
 		function update() {
 			if (!paused) {
 
@@ -64,20 +60,20 @@
 				var rowLen = width * 4;
 				for (var i = pic.data.length - 1, end = i - rowLen; i > end; i -= 4) {
 					pic.data[i] = 255;
-					pic.data[i - 1] = random(0, 50);
-					pic.data[i - 2] = random(180, 200);
-					pic.data[i - 3] = random(200, 255);
+					pic.data[i - 1] = 0
+					pic.data[i - 2] = random(0, 255);
+					pic.data[i - 3] = 255;
 				}
 
 				var l, r, b;
 				for (; i >= 0; i -= 4) {
 					pic.data[i] = 255;
-					for (var j = 1; j <= 3; ++j) {
-						l = pic.data[i - j + rowLen - 4] || 0;
-						r = pic.data[i - j + rowLen + 4] || 0;
-						b = pic.data[i - j + rowLen];
-						pic.data[i - j] = Math.floor(avg(l, r, b));
-					}
+					pic.data[i - 1] = 0;
+					l = pic.data[i - 2 + rowLen - 4] || 0;
+					b = pic.data[i - 2 + rowLen];
+					r = pic.data[i - 2 + rowLen + 4] || 0;
+					pic.data[i - 2] = Math.floor(avg(l, r, b));
+					pic.data[i - 3] = 255;
 				}
 
 			}
