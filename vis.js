@@ -327,7 +327,7 @@
 		if (typeof y === "undefined") this.y = 0;
 		if (typeof w === "undefined") this.w = VIS.width;
 		if (typeof h === "undefined") this.h = VIS.height;
-		this.data = ctx.getImageData(this.x, this.y, this.w, this.h);
+		this.img = ctx.getImageData(this.x, this.y, this.w, this.h);
 	};
 
 	VIS.ImageData.newImage = function(width, height) {
@@ -337,10 +337,23 @@
 	VIS.ImageData.prototype = (function() {
 		var api = {};
 
-		api.setData = function(data, x, y) {
+		api.getPx = function() {
+			this.img = ctx.getImageData(this.x, this.y, this.w, this.h);
+			return this.img.data;
+		};
+
+		api.newData = function(newData, x, y) {
 			if (typeof x === "undefined") x = 0;
 			if (typeof y === "undefined") y = 0;
-			ctx.putImageData(data, x, y);
+			this.img = newData;
+			this.x = x;
+			this.y = y;
+			this.w = newData.width;
+			this.h = newData.height;
+		};
+
+		api.draw = function() {
+			ctx.putImageData(this.img, this.x, this.y);
 		};
 
 		return api;

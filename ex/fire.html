@@ -33,8 +33,16 @@
 
 		size(600, 600);
 
-		var pic;
 		var canvasImage = new ImageData();
+		var px = canvasImage.getPx();
+ 
+		for (var i = 3, l = px.length; i < l; i += 4) {
+			px[i] = 255;
+		}
+
+		canvasImage.draw();
+
+		var rowLen = width * 4;
 
 		var paused = false;
 		function stop() {
@@ -52,36 +60,51 @@
 			return avg;
 		}
 
+		function palette(x) {
+			// TODO: color palette that takes 1 - 255 and returns a good color
+		}
+
 		function update() {
 			if (!paused) {
-
-				pic = ImageData.newImage(width, height);
-
-				var rowLen = width * 4;
-				for (var i = pic.data.length - 1, end = i - rowLen; i > end; i -= 4) {
-					pic.data[i] = 255;
-					pic.data[i - 1] = 0
-					pic.data[i - 2] = random(0, 255);
-					pic.data[i - 3] = 255;
+				px = canvasImage.getPx();
+				var rand;
+				for (var i = px.length - 1, end = i - rowLen; i > end; i -= 4) {
+					rand = random(0, 255);
+					px[i - 1] = random(0, 50);
+					px[i - 2] = rand;
+					px[i - 3] = 255;
 				}
 
-				var l, r, b;
+				var l, r, b, o;
 				for (; i >= 0; i -= 4) {
-					pic.data[i] = 255;
-					pic.data[i - 1] = 0;
-					l = pic.data[i - 2 + rowLen - 4] || 0;
-					b = pic.data[i - 2 + rowLen];
-					r = pic.data[i - 2 + rowLen + 4] || 0;
-					pic.data[i - 2] = Math.floor(avg(l, r, b));
-					pic.data[i - 3] = 255;
+					px[i - 1] = smooth2(px, i - 1);
+					px[i - 2] = smooth2(px, i - 2);
+					px[i - 3] = smooth2(px, i - 3);
 				}
 
 			}
 		}
 
+		function smooth1(arr, i) {
+			var l, r, b;
+			l = arr[i + rowLen - 4] || 0;
+			b = arr[i + rowLen];
+			r = arr[i + rowLen + 4] || 0;
+			return Math.floor(avg(l, b, r));
+		}
+
+		function smooth2(arr, i) {
+			var l, r, b, o;
+			o = arr[i];
+			l = arr[i + rowLen - 4] || 0;
+			b = arr[i + rowLen];
+			r = arr[i + rowLen + 4] || 0;
+			return Math.floor(avg(o, l, b, r));
+		}
+
 		function draw() {
 			if (!paused) {
-				canvasImage.setData(pic);
+				canvasImage.draw();
 			}
 		}
 
