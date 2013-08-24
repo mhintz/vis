@@ -28,8 +28,11 @@
 		
 		VIS.install();
 		setCanvas(document.getElementById("testCanvas"));
-
 		size(document.width - 16, document.height - 16);
+
+		strokeWidth(2);
+		lineCap("round");
+		var animateCircles = false;
 
 		// settings
 		var ioRatio = 1
@@ -46,6 +49,14 @@
 
 		calculateDim();
 
+		function play() {
+			animateCircles = true;
+		}
+
+		function stop() {
+			animateCircles = false;
+		}
+
 		// innerR + outerR + ptR = size;
 		// outerR / innerR = ioRatio;
 		// ptR / outerR = ptRatio;
@@ -61,17 +72,24 @@
 
 			calculateDim();
 
-			setup();
+			if (!animateCircles) {
+				setup();
+			} else {
+				newApp();
+			}
 		};
 
-		var app;
-		function setup() {
+		var app, trace;
+		function newApp() {
 			app = new Epitrochoid(width / 2, height / 2, innerR, outerR, ptR);
+			trace = new Polygon();
+		}
+
+		function setup() {
+			newApp();
 
 			background(0);
 			stroke(255);
-			strokeWidth(2);
-			lineCap("round");
 
 			var shape = new Polygon();
 			var initialPos = app.getDotPos();
@@ -90,28 +108,36 @@
 		}
 
 		// animate the drawing path
-/*		function update() {
-			app.increment(increment);
+		function update() {
+			if (animateCircles) {
+				app.increment(increment);
+			}
 		}
 
 		function draw() {
-			background(0);
+			if (animateCircles) {
+				background(0);
 
-			fill(255);
-			app.inner.draw();
-			app.outer.draw();
+				stroke(255);
+				app.inner.draw();
+				app.outer.draw();
 
-			stroke(35, 69, 103);
-			var edgeX = app.outer.x + (Math.cos(app.outer.rot) * app.outer.r);
-			var edgeY = app.outer.y + (Math.sin(app.outer.rot) * app.outer.r);
-			line(app.outer.x, app.outer.y, edgeX, edgeY);
-			noStroke();
+				var edgeX = app.outer.x + (Math.cos(app.outer.rot) * app.ptR);
+				var edgeY = app.outer.y + (Math.sin(app.outer.rot) * app.ptR);
+				line(app.outer.x, app.outer.y, edgeX, edgeY);
 
-			var dot = app.getDotPos();
+				var dot = app.getDotPos();
 
-			fill(200, 0, 0);
-			circle(dot.x, dot.y, 5);
-		}*/
+				stroke(200, 0, 0);
+				trace.vertex(dot);
+				trace.draw("open");
+				noStroke();
+
+				fill(200, 0, 0);
+				circle(dot.x, dot.y, 5);
+				noFill();
+			}
+		}
 
 		function Circle(cx, cy, r) {
 			this.x = cx;
