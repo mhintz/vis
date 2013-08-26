@@ -43,6 +43,8 @@
 		canvasImage.draw();
 
 		var rowLen = width * 4;
+		// change to two when smoothing over two rows, as in smooth4
+		var seedRows = 1;
 
 		var paused = false;
 		function stop() {
@@ -67,19 +69,19 @@
 		function update() {
 			if (!paused) {
 				px = canvasImage.getPx();
-				var rand;
-				for (var i = px.length - 1, end = i - rowLen; i > end; i -= 4) {
-					rand = random(0, 255);
+				for (var i = px.length - 1, end = i - (seedRows * rowLen); i > end; i -= 4) {
 					px[i - 1] = random(0, 50);
-					px[i - 2] = rand;
+					px[i - 2] = random(0, 255);
 					px[i - 3] = 255;
 				}
 
 				var l, r, b, o;
+				var linePct;
 				for (; i >= 0; i -= 4) {
-					px[i - 1] = smooth2(px, i - 1);
-					px[i - 2] = smooth2(px, i - 2);
-					px[i - 3] = smooth2(px, i - 3);
+					linePct = Math.floor(i / rowLen) / height;
+					px[i - 1] = smooth1(px, i - 1) * linePct;
+					px[i - 2] = smooth1(px, i - 2) * linePct;
+					px[i - 3] = smooth1(px, i - 3) * linePct;
 				}
 
 			}
@@ -100,6 +102,30 @@
 			b = arr[i + rowLen];
 			r = arr[i + rowLen + 4] || 0;
 			return Math.floor(avg(o, l, b, r));
+		}
+
+		function smooth3(arr, i) {
+			var l, c, r;
+			var bl, bc, br;
+			l = arr[i - 4];
+			c = arr[i];
+			r = arr[i + 4];
+			bl = arr[i + rowLen - 4];
+			bc = arr[i + rowLen];
+			br = arr[i + rowLen + 4];
+			return Math.floor(avg(l, c, r, bl, bc, br));
+		}
+
+		function smooth4(arr, i) {
+			var bl, bc, br;
+			var bbl, bbc, bbr;
+			bl = arr[i + rowLen - 4];
+			bc = arr[i + rowLen];
+			br = arr[i + rowLen + 4];
+			bbl = arr[i + (2 * rowLen) - 4];
+			bbc = arr[i + (2 * rowLen)];
+			bbr = arr[i + (2 * rowLen) + 4];
+			return Math.floor(avg(bl, bc, br, bbl, bbc, bbr));
 		}
 
 		function draw() {
