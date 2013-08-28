@@ -96,7 +96,15 @@
 	};
 
 	VIS.setCanvas = function(newCanvas) {
-		canvas = newCanvas;
+		if (!newCanvas.getContext) {
+			if (typeof newCanvas === "string" && newCanvas.charAt(0) === "#")  {
+				canvas = document.getElementById(newCanvas.substr(1));
+			} else {
+				throw new Error("Argument passed to setCanvas must be either canvas or canvas ID. "+newCanvas.toString()+" passed instead.");
+			}
+		} else {
+			canvas = newCanvas;
+		}
 		ctx = canvas.getContext("2d");
 	};
 
