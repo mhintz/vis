@@ -200,9 +200,34 @@
 	};
 
 	VIS.rect = function(x, y, w, h) {
-		if (VIS._stroke) ctx.strokeRect(x, y, w, h);
-		if (VIS._fill) ctx.fillRect(x, y, w, h);
-		else ctx.rect(x, y, w, h);
+		ctx.rect(x, y, w, h);
+		if (VIS._fill) ctx.fill();
+		if (VIS._stroke) ctx.stroke();
+	};
+
+	VIS.roundRect = function(x, y, w, h, r) {
+		ctx.beginPath();
+		// begin at end of upper left corner arc
+		ctx.moveTo(x + r, y);
+		// upper side
+		ctx.lineTo(x + w - r, y);
+		// upper right corner
+		ctx.arcTo(x + w, y, x + w, y + r, r);
+		// right side
+		ctx.lineTo(x + w, y + h - r);
+		// lower right corner
+		ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+		// lower side
+		ctx.lineTo(x + r, y + h);
+		// lower left corner
+		ctx.arcTo(x, y + h, x, y + h - r, r);
+		// left side
+		ctx.lineTo(x, y + r);
+		// upper left corner
+		ctx.arcTo(x, y, x + r, y, r);
+		// end
+		if (VIS._fill) ctx.fill();
+		if (VIS._stroke) ctx.stroke();
 	};
 
 	VIS.triangle = function(x1, y1, x2, y2, x3, y3) {
@@ -219,6 +244,34 @@
 		ctx.beginPath();
 		ctx.moveTo(x + r, y);
 		ctx.arc(x, y, r, 0, VIS.TWO_PI);
+		if (VIS._stroke) ctx.stroke();
+		if (VIS._fill) ctx.fill();
+	};
+
+	VIS.arc = function(x, y, r0, r1, a0, a1) {
+		var _width = ctx.lineWidth;
+		a0 = a0 === VIS.TWO_PI ? a0 : Math.abs(VIS.TWO_PI - a0);
+		a1 = a1 === VIS.TWO_PI ? a1 : Math.abs(VIS.TWO_PI - a1);
+		ctx.lineWidth = r1 - r0;
+		var r = r0 + ctx.lineWidth / 2;
+		ctx.beginPath();
+		ctx.moveTo(x, y);
+		ctx.arc(x, y, r, a0, a1, true);
+		if (VIS._stroke) ctx.stroke();
+		ctx.lineWidth = _width;
+	};
+
+	VIS.ngon = function(x, y, r, n) {
+		var inc = VIS.TWO_PI / n;
+		var px, py, a = 0;
+		ctx.beginPath();
+		ctx.moveTo(x + r, y);
+		for (var i = 0; i <= n; ++i) {
+			a += inc;
+			px = x + Math.cos(a) * r;
+			py = y + Math.sin(a) * r;
+			ctx.lineTo(px, py);
+		}
 		if (VIS._stroke) ctx.stroke();
 		if (VIS._fill) ctx.fill();
 	};
