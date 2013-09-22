@@ -43,6 +43,9 @@
 		document.addEventListener("keyup", keyUp);
 		if (typeof root.key !== "undefined") document.addEventListener("keydown", root.key);
 		if (typeof root.setup !== "undefined") root.setup();
+		// run these at least once
+		if (typeof root.update !== "undefined") root.update();
+		if (typeof root.draw !== "undefined") root.draw();	
 
 		// TODO: have this wait until all scripts have finished loading
 
@@ -51,8 +54,8 @@
 
 	function internalLoop() {
 		if (VIS._isLooping) {
-			if (typeof update !== "undefined") update();
-			if (typeof draw !== "undefined") draw();			
+			if (typeof root.update !== "undefined") root.update();
+			if (typeof root.draw !== "undefined") root.draw();			
 		}
 
 		// TODO: throttle loop speed to some framerate
@@ -387,6 +390,10 @@
 		proto.vertex = function(x, y) {
 			if (arguments.length === 1) this.vertices.push(x);
 			else this.vertices.push(new Point(x, y));
+		};
+
+		proto.clear = function() {
+			this.vertices = [];
 		};
 
 		proto.draw = function(open) {
