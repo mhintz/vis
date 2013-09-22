@@ -1,0 +1,138 @@
+<html>
+	<head>
+
+		<script type="text/javascript" src="../vis.js"></script>
+
+		<style>
+
+			body {
+				background-color: #000;	
+			}
+
+			canvas {
+				display: block;
+				margin: auto;
+			}
+
+		</style>
+
+	</head>
+	<body>
+
+		<canvas id="testCanvas"></canvas>
+
+	</body>
+
+	<script>
+		// sketch code goes here
+		// work on a fire algorithm, as explained HERE: http://www.gamedev.net/page/resources/_/technical/graphics-programming-and-theory/simple-fire-effect-r222
+		// AND HERE: https://www.google.com/search?q=fire+algorithm&oq=fire+algorithm&aqs=chrome..69i57j0l3.1783j0&sourceid=chrome&ie=UTF-8
+
+		VIS.install();
+		setCanvas(document.getElementById("testCanvas"));
+
+		size(600, 600);
+
+		var canvasImage = new RawPixels();
+		var px = canvasImage.getPx();
+ 
+		for (var i = 3, l = px.length; i < l; i += 4) {
+			px[i] = 255;
+		}
+
+		canvasImage.draw();
+
+		var rowLen = width * 4;
+		// change to two when smoothing over two rows, as in smooth4
+		var seedRows = 1;
+
+		var paused = false;
+		function stop() {
+			paused = true;
+		}
+		function play() {
+			paused = false;
+		}
+
+		function avg() {
+			var avg = 0;
+			for (var i = 0, l = arguments.length; i < l; ++i) {
+				avg += arguments[i] / l;
+			}
+			return avg;
+		}
+
+		function palette(x) {
+			// TODO: color palette that takes 1 - 255 and returns a good color
+		}
+
+		function update() {
+			if (!paused) {
+				px = canvasImage.getPx();
+				for (var i = px.length - 1, end = i - (seedRows * rowLen); i > end; i -= 4) {
+					px[i - 1] = random(0, 50);
+					px[i - 2] = random(0, 255);
+					px[i - 3] = 255;
+				}
+
+				var l, r, b, o;
+				var linePct;
+				for (; i >= 0; i -= 4) {
+					linePct = Math.floor(i / rowLen) / height;
+					px[i - 1] = smooth1(px, i - 1) * linePct;
+					px[i - 2] = smooth1(px, i - 2) * linePct;
+					px[i - 3] = smooth1(px, i - 3) * linePct;
+				}
+
+			}
+		}
+
+		function smooth1(arr, i) {
+			var l, r, b;
+			l = arr[i + rowLen - 4] || 0;
+			b = arr[i + rowLen];
+			r = arr[i + rowLen + 4] || 0;
+			return Math.floor(avg(l, b, r));
+		}
+
+		function smooth2(arr, i) {
+			var l, r, b, o;
+			o = arr[i];
+			l = arr[i + rowLen - 4] || 0;
+			b = arr[i + rowLen];
+			r = arr[i + rowLen + 4] || 0;
+			return Math.floor(avg(o, l, b, r));
+		}
+
+		function smooth3(arr, i) {
+			var l, c, r;
+			var bl, bc, br;
+			l = arr[i - 4];
+			c = arr[i];
+			r = arr[i + 4];
+			bl = arr[i + rowLen - 4];
+			bc = arr[i + rowLen];
+			br = arr[i + rowLen + 4];
+			return Math.floor(avg(l, c, r, bl, bc, br));
+		}
+
+		function smooth4(arr, i) {
+			var bl, bc, br;
+			var bbl, bbc, bbr;
+			bl = arr[i + rowLen - 4];
+			bc = arr[i + rowLen];
+			br = arr[i + rowLen + 4];
+			bbl = arr[i + (2 * rowLen) - 4];
+			bbc = arr[i + (2 * rowLen)];
+			bbr = arr[i + (2 * rowLen) + 4];
+			return Math.floor(avg(bl, bc, br, bbl, bbc, bbr));
+		}
+
+		function draw() {
+			if (!paused) {
+				canvasImage.draw();
+			}
+		}
+
+	</script>
+</html>
