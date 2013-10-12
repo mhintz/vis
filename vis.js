@@ -2,7 +2,7 @@
 
 	/*** INTERNALS ***/
 	var VIS = {
-		_version: "0.0.1",
+		VERSION: "0.0.1",
 		_installed: false,
 		_isLooping: true,
 		_stroke: false,
@@ -17,10 +17,23 @@
 		TWO_PI: 2 * Math.PI
 	};
 
-	root.VIS = VIS;
+	// umd module definition code taken from https://github.com/umdjs/umd/blob/master/returnExportsGlobal.js
+    if (typeof define === 'function' && define.amd) {
+        define([], function () {
+            return (root.VIS = VIS);
+        });
+    } else if (typeof exports !== 'undefined') {
+	    if (typeof module !== 'undefined' && module.exports) {
+			exports = module.exports = VIS;
+	    }
+	    exports.VIS = VIS;
+    } else {
+        root.VIS = VIS;
+    }
 
-	// TODO: add support for node? windowed mode?
-	// see https://github.com/rogerwang/node-webkit for probable way to do this
+	// TODO: figure out whether this works in node
+	// see https://github.com/learnboost/node-canvas
+	// see also https://github.com/rogerwang/node-webkit
 
 	var canvas = document.createElement("canvas");
 	var ctx = canvas.getContext("2d");
