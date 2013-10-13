@@ -60,7 +60,7 @@
 		if (typeof root.update !== "undefined") root.update();
 		if (typeof root.draw !== "undefined") root.draw();	
 
-		// TODO: have this wait until all scripts have finished loading
+		// TODO: create Ticker, based on EaselJS, which has a framerate setter and which can be listened to
 
 		requestAnimationFrame(internalLoop);
 	}
