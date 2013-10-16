@@ -12,7 +12,6 @@
 		mouseX: 0,
 		mouseY: 0,
 		keyPressed: null,
-		keys: {},
 		PI: Math.PI,
 		TWO_PI: 2 * Math.PI
 	};
@@ -109,6 +108,10 @@
 			}
 		}
 		VIS._installed = true;
+	};
+
+	VIS.isInstalled = function() {
+		return VIS._installed;
 	};
 
 	VIS.setCanvas = function(newCanvas) {
