@@ -1,18 +1,67 @@
-/*** INTERNALS ***/
-var VIS = {
-	VERSION: "0.0.1",
-	_installed: false,
-	_isLooping: true,
-	_stroke: false,
-	_fill: false,
-	width: 0,
-	height: 0,
-	mouseX: 0,
-	mouseY: 0,
-	keyPressed: null,
-	PI: Math.PI,
-	TWO_PI: 2 * Math.PI
+/**
+ * @preserve
+ * VIS.js, a library for creative coding in the browser
+ * Version 0.0.1
+ * Written as a personal exercise in coding, to better understand good API construction and use,
+ * to learn more about canvas and rendering, and to give me something to use for my own explorations.
+ * Tons of inspiration (and actual code) taken from the following excellent libraries:
+ * EaselJS: http://www.createjs.com/#!/EaselJS
+ * Sketch.js: https://github.com/soulwire/sketch.js
+ * Underscore: http://underscorejs.org/
+ * Backbone: http://backbonejs.org/
+
+ * Copyright (c) 2013 Mark Hintz
+
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/*** CORE ***/
+var VIS = function(canvas, options) {
+	if (VIS.isUndefined(canvas)) canvas = document.createElement("canvas");
+	options = VIS.extend(options || {}, false, defaults);
+	this.canvas = canvas;
+	this.ctx = canvas.getContext("2d");
 };
+
+var defaults = {
+	global: false,
+	fullscreen: false,
+	autostart: true,
+	autoclear: false,
+	autopause: true
+};
+
+VIS.VERSION = "0.0.1";
+VIS._installed = false;
+VIS._isLooping = true;
+VIS._stroke = false;
+VIS._fill = false;
+VIS.width = 0;
+VIS.height = 0;
+VIS.mouseX = 0;
+VIS.mouseY = 0;
+VIS.keyPressed = null;
+VIS.PI = Math.PI;
+VIS.TWO_PI = 2 * Math.PI;
 
 var root = this;
 

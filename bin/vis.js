@@ -1,18 +1,64 @@
 (function() {
-    var VIS = {
-        VERSION: "0.0.1",
-        _installed: false,
-        _isLooping: true,
-        _stroke: false,
-        _fill: false,
-        width: 0,
-        height: 0,
-        mouseX: 0,
-        mouseY: 0,
-        keyPressed: null,
-        PI: Math.PI,
-        TWO_PI: 2 * Math.PI
+    /**
+ * @preserve
+ * VIS.js, a library for creative coding in the browser
+ * Version 0.0.1
+ * Written as a personal exercise in coding, to better understand good API construction and use,
+ * to learn more about canvas and rendering, and to give me something to use for my own explorations.
+ * Tons of inspiration (and actual code) taken from the following excellent libraries:
+ * EaselJS: http://www.createjs.com/#!/EaselJS
+ * Sketch.js: https://github.com/soulwire/sketch.js
+ * Underscore: http://underscorejs.org/
+ * Backbone: http://backbonejs.org/
+
+ * Copyright (c) 2013 Mark Hintz
+
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+    var VIS = function(canvas, options) {
+        if (VIS.isUndefined(canvas)) canvas = document.createElement("canvas");
+        options = VIS.extend(options || {}, false, defaults);
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
     };
+    var defaults = {
+        global: false,
+        fullscreen: false,
+        autostart: true,
+        autoclear: false,
+        autopause: true
+    };
+    VIS.VERSION = "0.0.1";
+    VIS._installed = false;
+    VIS._isLooping = true;
+    VIS._stroke = false;
+    VIS._fill = false;
+    VIS.width = 0;
+    VIS.height = 0;
+    VIS.mouseX = 0;
+    VIS.mouseY = 0;
+    VIS.keyPressed = null;
+    VIS.PI = Math.PI;
+    VIS.TWO_PI = 2 * Math.PI;
     var root = this;
     if (typeof define === "function" && define.amd) {
         define([], function() {
@@ -258,6 +304,105 @@
         if (VIS._stroke) ctx.stroke();
         if (VIS._fill) ctx.fill();
     };
+    VIS.Point = function(x, y) {
+        this.x = x;
+        this.y = y;
+    };
+    VIS.Point.prototype = function() {
+        var proto = {};
+        proto.reset = function(x, y) {
+            this.x = x;
+            this.y = y;
+        };
+        return proto;
+    }();
+    VIS.Vec2D = function(x, y) {
+        this.x = x;
+        this.y = y;
+    };
+    VIS.Vec2D.prototype = function() {
+        var proto = VIS.Point.prototype;
+        proto.add = function(pt) {
+            this.x += pt.x;
+            this.y += pt.y;
+        };
+        proto.rot = function(pt) {
+            this.x *= pt.x;
+            this.y *= pt.y;
+        };
+        return proto;
+    }();
+    VIS.Particle = function(loc, vel, acc) {
+        this.loc = loc;
+        this.vel = vel;
+        this.acc = acc;
+    };
+    VIS.Particle.prototype = function() {
+        var proto = {};
+        proto.loc = function(loc) {
+            if (arguments.length === 0) return this.loc;
+            this.loc = loc;
+        };
+        proto.vel = function(vel) {
+            if (arguments.length === 0) return this.vel;
+            this.vel = vel;
+        };
+        proto.acc = function(acc) {
+            if (arguments.length === 0) return this.acc;
+            this.acc = acc;
+        };
+        proto.update = function() {
+            this.vel.add(this.acc);
+            this.loc.add(this.vel);
+        };
+        proto.draw = function() {
+            VIS.circle(this.loc.x, this.loc.y, 1);
+        };
+        proto.inView = function() {
+            return this.loc.x >= 0 && this.loc.x <= VIS.width && this.loc.y >= 0 && this.loc.y <= VIS.height;
+        };
+        return proto;
+    }();
+    VIS.Triangle = function(a, b, c) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+    };
+    VIS.Triangle.prototype = function() {
+        var proto = {};
+        proto.reset = function(a, b, c) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        };
+        proto.draw = function() {
+            VIS.triangle(this.a.x, this.a.y, this.b.x, this.b.y, this.c.x, this.c.y);
+        };
+        return proto;
+    }();
+    VIS.Polygon = function() {
+        this.vertices = [];
+    };
+    VIS.Polygon.prototype = function() {
+        var proto = {};
+        proto.vertex = function(x, y) {
+            if (arguments.length === 1) this.vertices.push(x); else this.vertices.push(new Point(x, y));
+        };
+        proto.clear = function() {
+            this.vertices = [];
+        };
+        proto.draw = function(open) {
+            ctx.beginPath();
+            ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
+            for (var i = 1, l = this.vertices.length; i < l; ++i) {
+                ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
+            }
+            if (open !== "open") ctx.closePath();
+            if (VIS._stroke) ctx.stroke();
+            if (VIS._fill) ctx.fill();
+        };
+        return proto;
+    }();
     VIS.random = function(low, high) {
         if (arguments.length === 0) return Math.random(); else if (arguments.length === 1) high = low, 
         low = 0;
@@ -438,150 +583,94 @@
         }
         return 32 * (n0 + n1 + n2 + n3);
     };
-    VIS.Point = function(x, y) {
-        this.x = x;
-        this.y = y;
+    VIS.slice = Array.prototype.slice;
+    VIS.bind = function(func, context) {
+        var args = VIS.slice.call(arguments, 2);
+        return function() {
+            func.apply(context, args.concat(VIS.slice.call(arguments)));
+        };
     };
-    VIS.Point.prototype = function() {
-        var proto = {};
-        proto.reset = function(x, y) {
-            this.x = x;
-            this.y = y;
-        };
-        return proto;
-    }();
-    VIS.Vec2D = function(x, y) {
-        this.x = x;
-        this.y = y;
+    VIS.isObject = function(candidate) {
+        return candidate === Object(candidate);
     };
-    VIS.Vec2D.prototype = function() {
-        var proto = VIS.Point.prototype;
-        proto.add = function(pt) {
-            this.x += pt.x;
-            this.y += pt.y;
-        };
-        proto.rot = function(pt) {
-            this.x *= pt.x;
-            this.y *= pt.y;
-        };
-        return proto;
-    }();
-    VIS.Particle = function(loc, vel, acc) {
-        this.loc = loc;
-        this.vel = vel;
-        this.acc = acc;
+    VIS.isFunction = function(candidate) {
+        return typeof candidate === "function";
     };
-    VIS.Particle.prototype = function() {
-        var proto = {};
-        proto.loc = function(loc) {
-            if (arguments.length === 0) return this.loc;
-            this.loc = loc;
-        };
-        proto.vel = function(vel) {
-            if (arguments.length === 0) return this.vel;
-            this.vel = vel;
-        };
-        proto.acc = function(acc) {
-            if (arguments.length === 0) return this.acc;
-            this.acc = acc;
-        };
-        proto.update = function() {
-            this.vel.add(this.acc);
-            this.loc.add(this.vel);
-        };
-        proto.draw = function() {
-            VIS.circle(this.loc.x, this.loc.y, 1);
-        };
-        proto.inView = function() {
-            return this.loc.x >= 0 && this.loc.x <= VIS.width && this.loc.y >= 0 && this.loc.y <= VIS.height;
-        };
-        return proto;
-    }();
-    VIS.Triangle = function(a, b, c) {
-        this.a = a;
-        this.b = b;
-        this.c = c;
+    VIS.isUndefined = function(candidate) {
+        return candidate === void 0;
     };
-    VIS.Triangle.prototype = function() {
-        var proto = {};
-        proto.reset = function(a, b, c) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-        };
-        proto.draw = function() {
-            VIS.triangle(this.a.x, this.a.y, this.b.x, this.b.y, this.c.x, this.c.y);
-        };
-        return proto;
-    }();
-    VIS.Polygon = function() {
-        this.vertices = [];
-    };
-    VIS.Polygon.prototype = function() {
-        var proto = {};
-        proto.vertex = function(x, y) {
-            if (arguments.length === 1) this.vertices.push(x); else this.vertices.push(new Point(x, y));
-        };
-        proto.clear = function() {
-            this.vertices = [];
-        };
-        proto.draw = function(open) {
-            ctx.beginPath();
-            ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
-            for (var i = 1, l = this.vertices.length; i < l; ++i) {
-                ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
+    VIS.extend = function(obj, overwrite) {
+        if (typeof overwrite === "boolean") {
+            var args = VIS.slice.call(arguments, 2);
+        } else {
+            var args = VIS.slice.call(arguments, 1);
+            overwrite = false;
+        }
+        var i = -1, l = args.length, source;
+        while (++i < l) {
+            source = args[i];
+            for (var key in source) {
+                if (!(key in obj) || overwrite) {
+                    obj[key] = source[key];
+                }
             }
-            if (open !== "open") ctx.closePath();
-            if (VIS._stroke) ctx.stroke();
-            if (VIS._fill) ctx.fill();
-        };
-        return proto;
-    }();
-    VIS.RawPixels = function(x, y, w, h) {
-        if (typeof x === "undefined") this.x = 0;
-        if (typeof y === "undefined") this.y = 0;
-        if (typeof w === "undefined") this.w = VIS.width;
-        if (typeof h === "undefined") this.h = VIS.height;
-        this.img = ctx.getImageData(this.x, this.y, this.w, this.h);
+        }
+        return obj;
     };
-    VIS.RawPixels.newImage = function(width, height) {
-        if (typeof width === "undefined") width = VIS.width;
-        if (typeof height === "undefined") height = VIS.height;
-        return ctx.createImageData(width, height);
+    VIS.lerp = function(low, high, amount) {
+        return low + amount * (high - low);
     };
-    VIS.RawPixels.prototype = function() {
-        var api = {};
-        api.getImg = function() {
-            this.img = ctx.getImageData(this.x, this.y, this.w, this.h);
-            return this.img;
-        };
-        api.setImg = function(newImg, x, y) {
-            if (typeof x === "undefined") x = 0;
-            if (typeof y === "undefined") y = 0;
-            this.img = newImg;
-            this.x = x;
-            this.y = y;
-            this.w = newImg.width;
-            this.h = newImg.height;
-            ctx.putImageData(this.img, this.x, this.y);
-        };
-        api.getPx = function() {
-            this.img = ctx.getImageData(this.x, this.y, this.w, this.h);
-            return this.img.data;
-        };
-        api.setPx = function(newPx) {
-            this.img.data = newPx;
-            ctx.putImageData(this.img, this.x, this.y);
-        };
-        api.draw = function() {
-            ctx.putImageData(this.img, this.x, this.y);
-        };
-        return api;
-    }();
     VIS.clamp = function(x, bot, top) {
         x = Math.min(top, Math.max(bot, parseFloat(x)));
         if (Math.abs(x - top) < 1e-6) return top; else if (Math.abs(x - bot) < 1e-6) return bot; else return x;
     };
+    VIS.Events = function() {
+        this._handlers = {};
+    };
+    VIS.Events.prototype = function() {
+        var api = {};
+        api.on = function(name, response, context) {
+            var list = this._handlers[name] || this._handlers[name] = [];
+            var i = list.length;
+            while (i--) if (list[i].fn === response) return false;
+            list.push({
+                fn: response,
+                cx: context || this
+            });
+            return true;
+        };
+        api.once = function(name, response, context) {
+            var self = this;
+            var once = function() {
+                self.off(name, once);
+                response.apply(this, arguments);
+            };
+            this.on(name, once, context);
+            return true;
+        };
+        api.trigger = function(name) {
+            var list = this._handlers[name];
+            if (list) {
+                var args = VIS.slice.call(arguments, 1), info, i = -1, l = list.length;
+                while (++i < l) (info = list[i]).fn.apply(info.cx, args);
+            }
+            return true;
+        };
+        api.off = function(name, response) {
+            if (!response) {
+                return delete this._handlers[name];
+            }
+            var list = this._handlers[name];
+            if (list) {
+                var i = list.length;
+                while (i--) {
+                    if (list[i].fn === response) list.splice(i, 1);
+                }
+                return true;
+            }
+        };
+        return api;
+    }();
     VIS.rgbToHex = function(r, g, b) {
         r = r.toString(16), g = g.toString(16), b = b.toString(16);
         if (r.length < 2) r = "0" + r;

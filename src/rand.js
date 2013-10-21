@@ -7,7 +7,7 @@ VIS.random = function(low, high) {
 
 /*** SIMPLEX PERLIN NOISE ***/
 /*** Code courtesy of: https://gist.github.com/banksean/304522 ***/
-/*** at least until I understand the Perlin algorithm ***/
+/*** kudos to you for grasping the Perlin algorithm ***/
 VIS.noise = function(x, y, z) {
 	if (arguments.length === 2) return perlin2D(x, y);
 	if (arguments.length === 3) return perlin3D(x, y, z);
