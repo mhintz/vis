@@ -36,24 +36,27 @@
 
 /*** CORE ***/
 var VIS = function(canvas, options) {
-	if (VIS.isUndefined(canvas)) canvas = document.createElement("canvas");
-	options = VIS.extend(options || {}, false, defaults);
-	this.canvas = canvas;
+	this.canvas = canvas || document.createElement("canvas");
 	this.ctx = canvas.getContext("2d");
-	return (options.global ? Install : Augment)(this);
+	VIS.extend(this, false, options || {}, defaultOpts, initialProps);
+	VIS.bindAll(this, VIS.functions(this));
+
+	if (options.augment || options.global) {
+		for (var name in this) {
+			if (name.slice(0, 1) !== "_") {
+				(options.augment ? this.ctx : root)[name] = this[name];
+			}
+		}
+	}
+	return options.augment ? this.ctx : options.global ? root : this;
 };
 
-function Install(visInstance) {
+VIS.VERSION = "0.0.1";
 
-	return visInstance;
-}
+var vp = VIS.prototype;
 
-function Augment(visInstance) {
-
-	return visInstance;
-}
-
-var defaults = {
+var defaultOpts = {
+	augment: false,
 	global: false,
 	fullscreen: false,
 	autostart: true,
@@ -61,18 +64,24 @@ var defaults = {
 	autopause: true
 };
 
-VIS.VERSION = "0.0.1";
-VIS._installed = false;
-VIS._isLooping = true;
-VIS._stroke = false;
-VIS._fill = false;
-VIS.width = 0;
-VIS.height = 0;
-VIS.mouseX = 0;
-VIS.mouseY = 0;
-VIS.keyPressed = null;
-VIS.PI = Math.PI;
-VIS.TWO_PI = 2 * Math.PI;
+var initialProps = {
+	_installed: false,
+	_isLooping: true,
+	_stroke: false,
+	_fill: false,
+	width: 0,
+	height: 0,
+	mouseX: 0,
+	mouseY: 0,
+	keyPressed: null,
+	touches: []
+};
+
+var constants = {
+	PI: Math.PI,
+	TWO_PI: 2 * Math.PI
+};
+
 
 var root = this;
 
