@@ -39,7 +39,14 @@
         options = VIS.extend(options || {}, false, defaults);
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
+        return (options.global ? Install : Augment)(this);
     };
+    function Install(visInstance) {
+        return visInstance;
+    }
+    function Augment(visInstance) {
+        return visInstance;
+    }
     var defaults = {
         global: false,
         fullscreen: false,
@@ -585,10 +592,21 @@
     };
     VIS.slice = Array.prototype.slice;
     VIS.bind = function(func, context) {
+        if (!VIS.isFunction(func)) throw new TypeError("passed a non-function to bind");
         var args = VIS.slice.call(arguments, 2);
         return function() {
             func.apply(context, args.concat(VIS.slice.call(arguments)));
         };
+    };
+    VIS.bindAll = function(context) {
+        var funcs = VIS.isArray(arguments[1]) ? arguments[1] : VIS.slice.call(arguments, 1), i = funcs.length;
+        while (i--) {
+            context[funcs[i]] = VIS.bind(context[funcs[i]], context);
+        }
+        return context;
+    };
+    VIS.isArray = function(candidate) {
+        return Object.prototype.toString.call(candidate) === "[object Array]";
     };
     VIS.isObject = function(candidate) {
         return candidate === Object(candidate);
@@ -617,6 +635,18 @@
         }
         return obj;
     };
+    VIS.functions = function(obj) {
+        var funcs = [];
+        for (var key in obj) {
+            if (VIS.isFunctions(obj[key])) funcs.push(key);
+        }
+        return funcs.sort();
+    };
+    var usefulMath = "PI abs acos asin atan atan2 ceil cos floor max min pow round sin sqrt tan".split(" "), i = usefulMath.length, prop;
+    while (i--) {
+        prop = usefulMath[i];
+        VIS[prop] = Math[prop];
+    }
     VIS.lerp = function(low, high, amount) {
         return low + amount * (high - low);
     };
