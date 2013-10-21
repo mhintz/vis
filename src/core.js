@@ -40,7 +40,18 @@ var VIS = function(canvas, options) {
 	options = VIS.extend(options || {}, false, defaults);
 	this.canvas = canvas;
 	this.ctx = canvas.getContext("2d");
+	return (options.global ? Install : Augment)(this);
 };
+
+function Install(visInstance) {
+
+	return visInstance;
+}
+
+function Augment(visInstance) {
+
+	return visInstance;
+}
 
 var defaults = {
 	global: false,
