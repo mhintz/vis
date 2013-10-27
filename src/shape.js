@@ -1,12 +1,11 @@
 /*** DATA CLASSES ***/
-function Point(instance, x, y) {
-	this._inst = instance;
+function Point(x, y) {
 	this.x = x;
 	this.y = y;
 }
 
 vp.Point = function(x, y) {
-	return new Point(this, x, y);
+	return new Point(x, y);
 };
 
 Point.prototype.reset = function(x, y) {
@@ -14,14 +13,13 @@ Point.prototype.reset = function(x, y) {
 	this.y = y;
 };
 
-function Vec2D(instance, x, y) {
-	this._inst = instance;
+function Vec2D(x, y) {
 	this.x = x;
 	this.y = y;
 }
 
 vp.Vec2D = function(x, y) {
-	return new Vec2D(this, x, y);
+	return new Vec2D(x, y);
 };
 
 Vec2D.prototype.add = function(pt) {
@@ -106,7 +104,7 @@ vp.Polygon = function() {
 
 Polygon.prototype.vertex = function(x, y) {
 	if (arguments.length === 1) this.vertices.push(x);
-	else this.vertices.push(new Point(x, y));
+	else this.vertices.push(vp.Point(x, y));
 };
 
 Polygon.prototype.clear = function() {

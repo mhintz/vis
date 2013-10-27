@@ -25,10 +25,9 @@
 
 	<script>
 		// sketch code goes here
+		var PI = Math.PI;
 		
-		VIS.install();
-		setCanvas(document.getElementById("testCanvas"));
-
+		var sketch = new VIS("#testCanvas", { global: true });
 		size(500, 620);
 
 		lineCap("round");
@@ -84,7 +83,7 @@
 
 			var subDivWidth = width / polySubdivisions;
 			for (var i = 0, l = pointData.length; i < l; ++i) {
-				var poly = new Polygon();
+				var poly = Polygon();
 				// bottom and left of polygon
 				poly.vertex(-10, height + 10);
 				var polyY = i * spaceHeight + margin.top;
