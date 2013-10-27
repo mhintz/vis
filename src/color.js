@@ -1,5 +1,5 @@
 /*** COLOR UTILITIES ***/
-VIS.rgbToHex = function(r, g, b) {
+vp.rgbToHex = function(r, g, b) {
 	r = r.toString(16), g = g.toString(16), b = b.toString(16);
 	if (r.length < 2) r = "0" + r;
 	if (g.length < 2) g = "0" + g;
@@ -9,10 +9,10 @@ VIS.rgbToHex = function(r, g, b) {
 
 // hsv conversion functions from the quite well-documented TinyColor.js library
 // https://github.com/bgrins/TinyColor
-VIS.rgbToHsv = function(r, g, b) {
-    r = VIS.clamp(r, 0, 255) / 255;
-    g = VIS.clamp(g, 0, 255) / 255;
-    b = VIS.clamp(b, 0, 255) / 255;
+vp.rgbToHsv = function(r, g, b) {
+    r = vp.clamp(r, 0, 255) / 255;
+    g = vp.clamp(g, 0, 255) / 255;
+    b = vp.clamp(b, 0, 255) / 255;
 
     var max = Math.max(r, g, b), min = Math.min(r, g, b);
     var h, s, v = max;
@@ -34,7 +34,7 @@ VIS.rgbToHsv = function(r, g, b) {
     return { h: h, s: s, v: v };
 };
 
-VIS.hexToRgb = function(hex) {
+vp.hexToRgb = function(hex) {
 	if (hex.length === 4) {
 		return {
 			r: parseInt(hex.substr(1, 1), 16),
@@ -50,14 +50,14 @@ VIS.hexToRgb = function(hex) {
 	}
 };
 
-VIS.hexToHsv = function(hex) {
-	return VIS.rgbToHsv(VIS.hexToRgb(hex));
+vp.hexToHsv = function(hex) {
+	return vp.rgbToHsv(vp.hexToRgb(hex));
 };
 
-VIS.hsvToRgb = function(h, s, v) {
-    h = VIS.clamp(h, 360) / 360 * 6;
-    s = VIS.clamp(s, 100) / 100;
-    v = VIS.clamp(v, 100) / 100;
+vp.hsvToRgb = function(h, s, v) {
+    h = vp.clamp(h, 360) / 360 * 6;
+    s = vp.clamp(s, 100) / 100;
+    v = vp.clamp(v, 100) / 100;
 
     var i = Math.floor(h),
         f = h - i,

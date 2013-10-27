@@ -1,144 +1,144 @@
 /*** DRAW SETTINGS ***/
-VIS.clear = function() {
-	ctx.clearRect(0, 0, VIS.width, VIS.height);
+vp.clear = function() {
+	this.ctx.clearRect(0, 0, this.width, this.height);
 };
 
-VIS.background = function(r, g, b) {
+vp.background = function(r, g, b) {
 	if (arguments.length === 1) g = b = r;
-	var _fill = ctx.fillStyle;
-	ctx.fillStyle = VIS.rgbToHex(r, g, b);
-	ctx.fillRect(0, 0, VIS.width, VIS.height);
-	ctx.fillStyle = _fill;
+	var _fill = this.ctx.fillStyle;
+	this.ctx.fillStyle = vp.rgbToHex(r, g, b);
+	this.ctx.fillRect(0, 0, this.width, this.height);
+	this.ctx.fillStyle = _fill;
 };
 
-VIS.stroke = function(r, g, b) {
+vp.stroke = function(r, g, b) {
 	if (arguments.length === 1) g = b = r;
-	ctx.strokeStyle = VIS.rgbToHex(r, g, b);
-	VIS._stroke = true;
+	this.ctx.strokeStyle = vp.rgbToHex(r, g, b);
+	this._stroke = true;
 };
 
-VIS.strokeWidth = function(w) {
-	ctx.lineWidth = w;
+vp.strokeWidth = function(w) {
+	this.ctx.lineWidth = w;
 };
 
-VIS.lineCap = function(cap) {
+vp.lineCap = function(cap) {
 	switch (cap) {
 		case "butt":
 		case "round":
 		case "square":
-			ctx.lineCap = cap;
+			this.ctx.lineCap = cap;
 		break;
 	}
 };
 
-VIS.lineJoin = function(join) {
+vp.lineJoin = function(join) {
 	switch (join) {
 		case "round":
 		case "bevel":
 		case "miter":
-			ctx.lineJoin = join;
+			this.ctx.lineJoin = join;
 		break;
 	}
 };
 
-VIS.noStroke = function() {
-	ctx.strokeStyle = "";
-	VIS._stroke = false;
+vp.noStroke = function() {
+	this.ctx.strokeStyle = "";
+	this._stroke = false;
 };
 
-VIS.fill = function(r, g, b) {
+vp.fill = function(r, g, b) {
 	if (arguments.length === 1) g = b = r;
-	ctx.fillStyle = VIS.rgbToHex(r, g, b);
-	VIS._fill = true;
+	this.ctx.fillStyle = vp.rgbToHex(r, g, b);
+	this._fill = true;
 };
 
-VIS.noFill = function() {
-	ctx.fillStyle = "";
-	VIS._fill = false;
+vp.noFill = function() {
+	this.ctx.fillStyle = "";
+	this._fill = false;
 };
 
 /*** SHAPE PRIMITIVES ***/
-VIS.line = function(x1, y1, x2, y2) {
+vp.line = function(x1, y1, x2, y2) {
 	if (arguments.length === 2) x2 = y1.x, y2 = y1.y, y1 = x1.y, x1 = x1.x;
-	ctx.beginPath();
-	ctx.moveTo(x1, y1);
-	ctx.lineTo(x2, y2);
-	if (VIS._stroke) ctx.stroke();
+	this.ctx.beginPath();
+	this.ctx.moveTo(x1, y1);
+	this.ctx.lineTo(x2, y2);
+	if (this._stroke) this.ctx.stroke();
 };
 
-VIS.rect = function(x, y, w, h) {
-	ctx.rect(x, y, w, h);
-	if (VIS._fill) ctx.fill();
-	if (VIS._stroke) ctx.stroke();
+vp.rect = function(x, y, w, h) {
+	this.ctx.rect(x, y, w, h);
+	if (this._fill) this.ctx.fill();
+	if (this._stroke) this.ctx.stroke();
 };
 
-VIS.roundRect = function(x, y, w, h, r) {
-	ctx.beginPath();
+vp.roundRect = function(x, y, w, h, r) {
+	this.ctx.beginPath();
 	// begin at end of upper left corner arc
-	ctx.moveTo(x + r, y);
+	this.ctx.moveTo(x + r, y);
 	// upper side
-	ctx.lineTo(x + w - r, y);
+	this.ctx.lineTo(x + w - r, y);
 	// upper right corner
-	ctx.arcTo(x + w, y, x + w, y + r, r);
+	this.ctx.arcTo(x + w, y, x + w, y + r, r);
 	// right side
-	ctx.lineTo(x + w, y + h - r);
+	this.ctx.lineTo(x + w, y + h - r);
 	// lower right corner
-	ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+	this.ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
 	// lower side
-	ctx.lineTo(x + r, y + h);
+	this.ctx.lineTo(x + r, y + h);
 	// lower left corner
-	ctx.arcTo(x, y + h, x, y + h - r, r);
+	this.ctx.arcTo(x, y + h, x, y + h - r, r);
 	// left side
-	ctx.lineTo(x, y + r);
+	this.ctx.lineTo(x, y + r);
 	// upper left corner
-	ctx.arcTo(x, y, x + r, y, r);
+	this.ctx.arcTo(x, y, x + r, y, r);
 	// end
-	if (VIS._fill) ctx.fill();
-	if (VIS._stroke) ctx.stroke();
+	if (this._fill) this.ctx.fill();
+	if (this._stroke) this.ctx.stroke();
 };
 
-VIS.triangle = function(x1, y1, x2, y2, x3, y3) {
-	ctx.beginPath();
-	ctx.moveTo(x1, y1);
-	ctx.lineTo(x2, y2);
-	ctx.lineTo(x3, y3);
-	ctx.lineTo(x1, y1);
-	if (VIS._stroke) ctx.stroke();
-	if (VIS._fill) ctx.fill();
+vp.triangle = function(x1, y1, x2, y2, x3, y3) {
+	this.ctx.beginPath();
+	this.ctx.moveTo(x1, y1);
+	this.ctx.lineTo(x2, y2);
+	this.ctx.lineTo(x3, y3);
+	this.ctx.lineTo(x1, y1);
+	if (this._stroke) this.ctx.stroke();
+	if (this._fill) this.ctx.fill();
 };
 
-VIS.circle = function(x, y, r) {
-	ctx.beginPath();
-	ctx.moveTo(x + r, y);
-	ctx.arc(x, y, r, 0, VIS.TWO_PI);
-	if (VIS._stroke) ctx.stroke();
-	if (VIS._fill) ctx.fill();
+vp.circle = function(x, y, r) {
+	this.ctx.beginPath();
+	this.ctx.moveTo(x + r, y);
+	this.ctx.arc(x, y, r, 0, TWO_PI);
+	if (this._stroke) this.ctx.stroke();
+	if (this._fill) this.ctx.fill();
 };
 
-VIS.arc = function(x, y, r0, r1, a0, a1) {
-	var _width = ctx.lineWidth;
-	a0 = a0 === VIS.TWO_PI ? a0 : Math.abs(VIS.TWO_PI - a0);
-	a1 = a1 === VIS.TWO_PI ? a1 : Math.abs(VIS.TWO_PI - a1);
-	ctx.lineWidth = r1 - r0;
-	var r = r0 + ctx.lineWidth / 2;
-	ctx.beginPath();
-	ctx.moveTo(x, y);
-	ctx.arc(x, y, r, a0, a1, true);
-	if (VIS._stroke) ctx.stroke();
-	ctx.lineWidth = _width;
+vp.arc = function(x, y, r0, r1, a0, a1) {
+	var _width = this.ctx.lineWidth;
+	a0 = a0 === TWO_PI ? a0 : Math.abs(TWO_PI - a0);
+	a1 = a1 === TWO_PI ? a1 : Math.abs(TWO_PI - a1);
+	this.ctx.lineWidth = r1 - r0;
+	var r = r0 + this.ctx.lineWidth / 2;
+	this.ctx.beginPath();
+	this.ctx.moveTo(x, y);
+	this.ctx.arc(x, y, r, a0, a1, true);
+	if (this._stroke) this.ctx.stroke();
+	this.ctx.lineWidth = _width;
 };
 
-VIS.ngon = function(x, y, r, n) {
-	var inc = VIS.TWO_PI / n;
+vp.ngon = function(x, y, r, n) {
+	var inc = TWO_PI / n;
 	var px, py, a = 0;
-	ctx.beginPath();
-	ctx.moveTo(x + r, y);
+	this.ctx.beginPath();
+	this.ctx.moveTo(x + r, y);
 	for (var i = 0; i <= n; ++i) {
 		a += inc;
 		px = x + Math.cos(a) * r;
 		py = y + Math.sin(a) * r;
-		ctx.lineTo(px, py);
+		this.ctx.lineTo(px, py);
 	}
-	if (VIS._stroke) ctx.stroke();
-	if (VIS._fill) ctx.fill();
+	if (this._stroke) this.ctx.stroke();
+	if (this._fill) this.ctx.fill();
 };

@@ -9,6 +9,8 @@
  * Sketch.js: https://github.com/soulwire/sketch.js
  * Underscore: http://underscorejs.org/
  * Backbone: http://backbonejs.org/
+ * Tons of inspiration for method ideas comes from the Processing project:
+ * http://processing.org/
 
  * Copyright (c) 2013 Mark Hintz
 
@@ -35,6 +37,10 @@
  */
 
 /*** CORE ***/
+
+// VIS object constructor.
+// Binds all prototype methods to the new object
+// optionally makes all properties of VIS globals (for processing sketch-style apps)
 var VIS = function(canvas, options) {
 	this.canvas = canvas || document.createElement("canvas");
 	this.ctx = canvas.getContext("2d");
@@ -48,12 +54,38 @@ var VIS = function(canvas, options) {
 			}
 		}
 	}
+	this._installed = !!options.global;
+
+	this.canvas.addEventListener("mousemove", this.setMousePos);
+	document.addEventListener("keydown", this.keyDown);
+	document.addEventListener("keyup", this.keyUp);
+	// sugar for user-defined event handlers
+	if (this.isFunction(root.click)) this.canvas.addEventListener("click", root.click);
+	if (this.isFunction(root.mousedown)) this.canvas.addEventListener("mousedown", root.mousedown);
+	if (this.isFunction(root.mouseup)) this.canvas.addEventListener("mouseup", root.mouseup);
+	if (this.isFunction(root.move)) this.canvas.addEventListener("mousemove", root.move);
+	if (this.isFunction(root.key)) document.addEventListener("keydown", root.key);
+	// sugar for user-defined setup/update/draw loop
+	if (this.isFunction(root.setup)) root.setup();
+	// run these at least once
+	if (this.isFunction(root.update)) root.update();
+	if (this.isFunction(root.draw)) root.draw();	
+
+	// TODO: create Ticker, based on EaselJS, which has a framerate setter and which can be listened to
+	// TODO: include RAF polyfill
+	// TODO: throttle loop speed to some framerate
+
+	requestAnimationFrame(this.internalLoop);
+
 	return options.augment ? this.ctx : options.global ? root : this;
 };
 
-VIS.VERSION = "0.0.1";
-
+// helper variables
 var vp = VIS.prototype;
+// root object
+var root = this;
+
+VIS.VERSION = "0.0.1";
 
 var defaultOpts = {
 	augment: false,
@@ -77,13 +109,9 @@ var initialProps = {
 	touches: []
 };
 
-var constants = {
-	PI: Math.PI,
-	TWO_PI: 2 * Math.PI
-};
-
-
-var root = this;
+// constants
+var PI = Math.PI,
+	TWO_PI = 2 * PI;
 
 // umd module definition code taken from https://github.com/umdjs/umd/blob/master/returnExportsGlobal.js
 if (typeof define === 'function' && define.amd) {
@@ -103,124 +131,92 @@ if (typeof define === 'function' && define.amd) {
 // see https://github.com/learnboost/node-canvas
 // see also https://github.com/rogerwang/node-webkit
 
-var canvas = document.createElement("canvas");
-var ctx = canvas.getContext("2d");
-
-if (typeof root.onload !== "undefined") {
-	var _load = root.onload;
-	root.onload = function() {
-		if (typeof _load === "function") _load();
-		internalSetup();
-	};
-} else {
-	internalSetup();
-}
-
-function internalSetup() {
-	if (typeof root.click !== "undefined") document.addEventListener("click", root.click);
-	document.addEventListener("mousemove", setMousePos);
-	if (typeof root.move !== "undefined") document.addEventListener("mousemove", root.move);
-	document.addEventListener("keydown", keyDown);
-	document.addEventListener("keyup", keyUp);
-	if (typeof root.key !== "undefined") document.addEventListener("keydown", root.key);
-	if (typeof root.setup !== "undefined") root.setup();
-	// run these at least once
-	if (typeof root.update !== "undefined") root.update();
-	if (typeof root.draw !== "undefined") root.draw();	
-
-	// TODO: create Ticker, based on EaselJS, which has a framerate setter and which can be listened to
-
-	requestAnimationFrame(internalLoop);
-}
-
-function internalLoop() {
-	if (VIS._isLooping) {
-		if (typeof root.update !== "undefined") root.update();
-		if (typeof root.draw !== "undefined") root.draw();			
+vp.internalLoop = function() {
+	if (this._isLooping) {
+		if (isFunction(root.update)) root.update();
+		if (isFunction(root.draw)) root.draw();
 	}
 
-	// TODO: throttle loop speed to some framerate
-
-	requestAnimationFrame(internalLoop);
+	requestAnimationFrame(this.internalLoop);
 }
 
-function setMousePos(e) {
-	VIS.mouseX = e.clientX;
-	VIS.mouseY = e.clientY;
-	if (VIS._installed) {
+this.setMousePos = function(e) {
+	this.mouseX = e.clientX;
+	this.mouseY = e.clientY;
+	if (this._installed) {
 		root.mouseX = e.clientX;
 		root.mouseY = e.clientY;
 	}
 }
 
-function keyDown(e) {
-	var code = typeof e.keyCode !== "undefined" ? e.keyCode : e.charCode;
-	var key = VIS.keyDict[code] || code;
-	VIS.keyPressed = key;
-	if (VIS._installed) {
+this.keyDown = function(e) {
+	var code = !vp.isUndefined(e.keyCode) ? e.keyCode : e.charCode;
+	var key = vp.keyDict[code] || String.fromCharCode(code);
+	this.keyPressed = key;
+	if (this._installed) {
 		root.keyPressed = key;
 	}
 }
 
-function keyUp(e) {
-	VIS.keyPressed = null;
-	if (VIS._installed) {
+this.keyUp = function() {
+	this.keyPressed = null;
+	if (this._installed) {
 		root.keyPressed = null;
 	}
 }
 
 /*** SETUP ***/
-VIS.install = function() {
-	for (var name in VIS) {
+vp.install = function() {
+	for (var name in this) {
 		if (name.slice(0, 1) !== "_") {
-			root[name] = VIS[name];
+			root[name] = this[name];
 		}
 	}
-	VIS._installed = true;
+	this._installed = true;
 };
 
-VIS.isInstalled = function() {
-	return VIS._installed;
+vp.isInstalled = function() {
+	return this._installed;
 };
 
-VIS.setCanvas = function(newCanvas) {
+vp.setCanvas = function(newCanvas) {
 	if (!newCanvas.getContext) {
 		if (typeof newCanvas === "string" && newCanvas.charAt(0) === "#")  {
-			canvas = document.getElementById(newCanvas.substr(1));
+			this.canvas = document.getElementById(newCanvas.substr(1));
 		} else {
 			throw new Error("Argument passed to setCanvas must be either canvas or canvas ID. "+newCanvas.toString()+" passed instead.");
 		}
 	} else {
-		canvas = newCanvas;
+		this.canvas = newCanvas;
 	}
-	ctx = canvas.getContext("2d");
+	this.ctx = this.canvas.getContext("2d");
 };
 
-VIS.getCanvas = function() {
-	return canvas;
+vp.getCanvas = function() {
+	return this.canvas;
 };
 
-VIS.size = function(width, height) {
-	VIS.width = width;
-	canvas.setAttribute("width", width);
-	VIS.height = height;
-	canvas.setAttribute("height", height);
-	if (VIS._installed) {
+vp.size = function(width, height) {
+	this.width = width;
+	this.canvas.setAttribute("width", width);
+	this.height = height;
+	this.canvas.setAttribute("height", height);
+	if (this._installed) {
 		root.width = width;
 		root.height = height;			
 	}
 };
 
-VIS.loop = function() {
-	VIS._isLooping = true;
+vp.loop = function() {
+	this._isLooping = true;
 };
 
-VIS.noLoop = function() {
-	VIS._isLooping = false;
+vp.noLoop = function() {
+	this._isLooping = false;
 };
 
 /*** keyCode dict ***/
-VIS.keyDict = {
+vp.keyDict = {
 	8: "backspace",
 	9: "tab",
 	13: "return",

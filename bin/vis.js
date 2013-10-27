@@ -10,6 +10,8 @@
  * Sketch.js: https://github.com/soulwire/sketch.js
  * Underscore: http://underscorejs.org/
  * Backbone: http://backbonejs.org/
+ * Tons of inspiration for method ideas comes from the Processing project:
+ * http://processing.org/
 
  * Copyright (c) 2013 Mark Hintz
 
@@ -35,38 +37,56 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
     var VIS = function(canvas, options) {
-        if (VIS.isUndefined(canvas)) canvas = document.createElement("canvas");
-        options = VIS.extend(options || {}, false, defaults);
-        this.canvas = canvas;
+        this.canvas = canvas || document.createElement("canvas");
         this.ctx = canvas.getContext("2d");
-        return (options.global ? Install : Augment)(this);
+        VIS.extend(this, false, options || {}, defaultOpts, initialProps);
+        VIS.bindAll(this, VIS.functions(this));
+        if (options.augment || options.global) {
+            for (var name in this) {
+                if (name.slice(0, 1) !== "_") {
+                    (options.augment ? this.ctx : root)[name] = this[name];
+                }
+            }
+        }
+        this._installed = !!options.global;
+        this.canvas.addEventListener("mousemove", this.setMousePos);
+        document.addEventListener("keydown", this.keyDown);
+        document.addEventListener("keyup", this.keyUp);
+        if (this.isFunction(root.click)) this.canvas.addEventListener("click", root.click);
+        if (this.isFunction(root.mousedown)) this.canvas.addEventListener("mousedown", root.mousedown);
+        if (this.isFunction(root.mouseup)) this.canvas.addEventListener("mouseup", root.mouseup);
+        if (this.isFunction(root.move)) this.canvas.addEventListener("mousemove", root.move);
+        if (this.isFunction(root.key)) document.addEventListener("keydown", root.key);
+        if (this.isFunction(root.setup)) root.setup();
+        if (this.isFunction(root.update)) root.update();
+        if (this.isFunction(root.draw)) root.draw();
+        requestAnimationFrame(this.internalLoop);
+        return options.augment ? this.ctx : options.global ? root : this;
     };
-    function Install(visInstance) {
-        return visInstance;
-    }
-    function Augment(visInstance) {
-        return visInstance;
-    }
-    var defaults = {
+    var vp = VIS.prototype;
+    var root = this;
+    VIS.VERSION = "0.0.1";
+    var defaultOpts = {
+        augment: false,
         global: false,
         fullscreen: false,
         autostart: true,
         autoclear: false,
         autopause: true
     };
-    VIS.VERSION = "0.0.1";
-    VIS._installed = false;
-    VIS._isLooping = true;
-    VIS._stroke = false;
-    VIS._fill = false;
-    VIS.width = 0;
-    VIS.height = 0;
-    VIS.mouseX = 0;
-    VIS.mouseY = 0;
-    VIS.keyPressed = null;
-    VIS.PI = Math.PI;
-    VIS.TWO_PI = 2 * Math.PI;
-    var root = this;
+    var initialProps = {
+        _installed: false,
+        _isLooping: true,
+        _stroke: false,
+        _fill: false,
+        width: 0,
+        height: 0,
+        mouseX: 0,
+        mouseY: 0,
+        keyPressed: null,
+        touches: []
+    };
+    var PI = Math.PI, TWO_PI = 2 * PI;
     if (typeof define === "function" && define.amd) {
         define([], function() {
             return root.VIS = VIS;
@@ -79,101 +99,78 @@
     } else {
         root.VIS = VIS;
     }
-    var canvas = document.createElement("canvas");
-    var ctx = canvas.getContext("2d");
-    if (typeof root.onload !== "undefined") {
-        var _load = root.onload;
-        root.onload = function() {
-            if (typeof _load === "function") _load();
-            internalSetup();
-        };
-    } else {
-        internalSetup();
-    }
-    function internalSetup() {
-        if (typeof root.click !== "undefined") document.addEventListener("click", root.click);
-        document.addEventListener("mousemove", setMousePos);
-        if (typeof root.move !== "undefined") document.addEventListener("mousemove", root.move);
-        document.addEventListener("keydown", keyDown);
-        document.addEventListener("keyup", keyUp);
-        if (typeof root.key !== "undefined") document.addEventListener("keydown", root.key);
-        if (typeof root.setup !== "undefined") root.setup();
-        if (typeof root.update !== "undefined") root.update();
-        if (typeof root.draw !== "undefined") root.draw();
-        requestAnimationFrame(internalLoop);
-    }
-    function internalLoop() {
-        if (VIS._isLooping) {
-            if (typeof root.update !== "undefined") root.update();
-            if (typeof root.draw !== "undefined") root.draw();
+    vp.internalLoop = function() {
+        if (this._isLooping) {
+            if (isFunction(root.update)) root.update();
+            if (isFunction(root.draw)) root.draw();
         }
-        requestAnimationFrame(internalLoop);
-    }
-    function setMousePos(e) {
-        VIS.mouseX = e.clientX;
-        VIS.mouseY = e.clientY;
-        if (VIS._installed) {
+        requestAnimationFrame(this.internalLoop);
+    };
+    this.setMousePos = function(e) {
+        this.mouseX = e.clientX;
+        this.mouseY = e.clientY;
+        if (this._installed) {
             root.mouseX = e.clientX;
             root.mouseY = e.clientY;
         }
-    }
-    function keyDown(e) {
-        var code = typeof e.keyCode !== "undefined" ? e.keyCode : e.charCode;
-        var key = VIS.keyDict[code] || code;
-        VIS.keyPressed = key;
-        if (VIS._installed) {
+    };
+    this.keyDown = function(e) {
+        var code = !vp.isUndefined(e.keyCode) ? e.keyCode : e.charCode;
+        var key = vp.keyDict[code] || String.fromCharCode(code);
+        this.keyPressed = key;
+        if (this._installed) {
             root.keyPressed = key;
         }
-    }
-    function keyUp(e) {
-        VIS.keyPressed = null;
-        if (VIS._installed) {
+    };
+    this.keyUp = function() {
+        this.keyPressed = null;
+        if (this._installed) {
             root.keyPressed = null;
         }
-    }
-    VIS.install = function() {
-        for (var name in VIS) {
+    };
+    vp.install = function() {
+        for (var name in this) {
             if (name.slice(0, 1) !== "_") {
-                root[name] = VIS[name];
+                root[name] = this[name];
             }
         }
-        VIS._installed = true;
+        this._installed = true;
     };
-    VIS.isInstalled = function() {
-        return VIS._installed;
+    vp.isInstalled = function() {
+        return this._installed;
     };
-    VIS.setCanvas = function(newCanvas) {
+    vp.setCanvas = function(newCanvas) {
         if (!newCanvas.getContext) {
             if (typeof newCanvas === "string" && newCanvas.charAt(0) === "#") {
-                canvas = document.getElementById(newCanvas.substr(1));
+                this.canvas = document.getElementById(newCanvas.substr(1));
             } else {
                 throw new Error("Argument passed to setCanvas must be either canvas or canvas ID. " + newCanvas.toString() + " passed instead.");
             }
         } else {
-            canvas = newCanvas;
+            this.canvas = newCanvas;
         }
-        ctx = canvas.getContext("2d");
+        this.ctx = this.canvas.getContext("2d");
     };
-    VIS.getCanvas = function() {
-        return canvas;
+    vp.getCanvas = function() {
+        return this.canvas;
     };
-    VIS.size = function(width, height) {
-        VIS.width = width;
-        canvas.setAttribute("width", width);
-        VIS.height = height;
-        canvas.setAttribute("height", height);
-        if (VIS._installed) {
+    vp.size = function(width, height) {
+        this.width = width;
+        this.canvas.setAttribute("width", width);
+        this.height = height;
+        this.canvas.setAttribute("height", height);
+        if (this._installed) {
             root.width = width;
             root.height = height;
         }
     };
-    VIS.loop = function() {
-        VIS._isLooping = true;
+    vp.loop = function() {
+        this._isLooping = true;
     };
-    VIS.noLoop = function() {
-        VIS._isLooping = false;
+    vp.noLoop = function() {
+        this._isLooping = false;
     };
-    VIS.keyDict = {
+    vp.keyDict = {
         8: "backspace",
         9: "tab",
         13: "return",
@@ -194,228 +191,228 @@
         83: "s",
         68: "d"
     };
-    VIS.clear = function() {
-        ctx.clearRect(0, 0, VIS.width, VIS.height);
+    vp.clear = function() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
     };
-    VIS.background = function(r, g, b) {
+    vp.background = function(r, g, b) {
         if (arguments.length === 1) g = b = r;
-        var _fill = ctx.fillStyle;
-        ctx.fillStyle = VIS.rgbToHex(r, g, b);
-        ctx.fillRect(0, 0, VIS.width, VIS.height);
-        ctx.fillStyle = _fill;
+        var _fill = this.ctx.fillStyle;
+        this.ctx.fillStyle = vp.rgbToHex(r, g, b);
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.fillStyle = _fill;
     };
-    VIS.stroke = function(r, g, b) {
+    vp.stroke = function(r, g, b) {
         if (arguments.length === 1) g = b = r;
-        ctx.strokeStyle = VIS.rgbToHex(r, g, b);
-        VIS._stroke = true;
+        this.ctx.strokeStyle = vp.rgbToHex(r, g, b);
+        this._stroke = true;
     };
-    VIS.strokeWidth = function(w) {
-        ctx.lineWidth = w;
+    vp.strokeWidth = function(w) {
+        this.ctx.lineWidth = w;
     };
-    VIS.lineCap = function(cap) {
+    vp.lineCap = function(cap) {
         switch (cap) {
           case "butt":
           case "round":
           case "square":
-            ctx.lineCap = cap;
+            this.ctx.lineCap = cap;
             break;
         }
     };
-    VIS.lineJoin = function(join) {
+    vp.lineJoin = function(join) {
         switch (join) {
           case "round":
           case "bevel":
           case "miter":
-            ctx.lineJoin = join;
+            this.ctx.lineJoin = join;
             break;
         }
     };
-    VIS.noStroke = function() {
-        ctx.strokeStyle = "";
-        VIS._stroke = false;
+    vp.noStroke = function() {
+        this.ctx.strokeStyle = "";
+        this._stroke = false;
     };
-    VIS.fill = function(r, g, b) {
+    vp.fill = function(r, g, b) {
         if (arguments.length === 1) g = b = r;
-        ctx.fillStyle = VIS.rgbToHex(r, g, b);
-        VIS._fill = true;
+        this.ctx.fillStyle = vp.rgbToHex(r, g, b);
+        this._fill = true;
     };
-    VIS.noFill = function() {
-        ctx.fillStyle = "";
-        VIS._fill = false;
+    vp.noFill = function() {
+        this.ctx.fillStyle = "";
+        this._fill = false;
     };
-    VIS.line = function(x1, y1, x2, y2) {
+    vp.line = function(x1, y1, x2, y2) {
         if (arguments.length === 2) x2 = y1.x, y2 = y1.y, y1 = x1.y, x1 = x1.x;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        if (VIS._stroke) ctx.stroke();
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
+        if (this._stroke) this.ctx.stroke();
     };
-    VIS.rect = function(x, y, w, h) {
-        ctx.rect(x, y, w, h);
-        if (VIS._fill) ctx.fill();
-        if (VIS._stroke) ctx.stroke();
+    vp.rect = function(x, y, w, h) {
+        this.ctx.rect(x, y, w, h);
+        if (this._fill) this.ctx.fill();
+        if (this._stroke) this.ctx.stroke();
     };
-    VIS.roundRect = function(x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.arcTo(x + w, y, x + w, y + r, r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-        ctx.lineTo(x + r, y + h);
-        ctx.arcTo(x, y + h, x, y + h - r, r);
-        ctx.lineTo(x, y + r);
-        ctx.arcTo(x, y, x + r, y, r);
-        if (VIS._fill) ctx.fill();
-        if (VIS._stroke) ctx.stroke();
+    vp.roundRect = function(x, y, w, h, r) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + r, y);
+        this.ctx.lineTo(x + w - r, y);
+        this.ctx.arcTo(x + w, y, x + w, y + r, r);
+        this.ctx.lineTo(x + w, y + h - r);
+        this.ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+        this.ctx.lineTo(x + r, y + h);
+        this.ctx.arcTo(x, y + h, x, y + h - r, r);
+        this.ctx.lineTo(x, y + r);
+        this.ctx.arcTo(x, y, x + r, y, r);
+        if (this._fill) this.ctx.fill();
+        if (this._stroke) this.ctx.stroke();
     };
-    VIS.triangle = function(x1, y1, x2, y2, x3, y3) {
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.lineTo(x3, y3);
-        ctx.lineTo(x1, y1);
-        if (VIS._stroke) ctx.stroke();
-        if (VIS._fill) ctx.fill();
+    vp.triangle = function(x1, y1, x2, y2, x3, y3) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
+        this.ctx.lineTo(x3, y3);
+        this.ctx.lineTo(x1, y1);
+        if (this._stroke) this.ctx.stroke();
+        if (this._fill) this.ctx.fill();
     };
-    VIS.circle = function(x, y, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arc(x, y, r, 0, VIS.TWO_PI);
-        if (VIS._stroke) ctx.stroke();
-        if (VIS._fill) ctx.fill();
+    vp.circle = function(x, y, r) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + r, y);
+        this.ctx.arc(x, y, r, 0, TWO_PI);
+        if (this._stroke) this.ctx.stroke();
+        if (this._fill) this.ctx.fill();
     };
-    VIS.arc = function(x, y, r0, r1, a0, a1) {
-        var _width = ctx.lineWidth;
-        a0 = a0 === VIS.TWO_PI ? a0 : Math.abs(VIS.TWO_PI - a0);
-        a1 = a1 === VIS.TWO_PI ? a1 : Math.abs(VIS.TWO_PI - a1);
-        ctx.lineWidth = r1 - r0;
-        var r = r0 + ctx.lineWidth / 2;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.arc(x, y, r, a0, a1, true);
-        if (VIS._stroke) ctx.stroke();
-        ctx.lineWidth = _width;
+    vp.arc = function(x, y, r0, r1, a0, a1) {
+        var _width = this.ctx.lineWidth;
+        a0 = a0 === TWO_PI ? a0 : Math.abs(TWO_PI - a0);
+        a1 = a1 === TWO_PI ? a1 : Math.abs(TWO_PI - a1);
+        this.ctx.lineWidth = r1 - r0;
+        var r = r0 + this.ctx.lineWidth / 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+        this.ctx.arc(x, y, r, a0, a1, true);
+        if (this._stroke) this.ctx.stroke();
+        this.ctx.lineWidth = _width;
     };
-    VIS.ngon = function(x, y, r, n) {
-        var inc = VIS.TWO_PI / n;
+    vp.ngon = function(x, y, r, n) {
+        var inc = TWO_PI / n;
         var px, py, a = 0;
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + r, y);
         for (var i = 0; i <= n; ++i) {
             a += inc;
             px = x + Math.cos(a) * r;
             py = y + Math.sin(a) * r;
-            ctx.lineTo(px, py);
+            this.ctx.lineTo(px, py);
         }
-        if (VIS._stroke) ctx.stroke();
-        if (VIS._fill) ctx.fill();
+        if (this._stroke) this.ctx.stroke();
+        if (this._fill) this.ctx.fill();
     };
-    VIS.Point = function(x, y) {
+    function Point(instance, x, y) {
+        this._inst = instance;
+        this.x = x;
+        this.y = y;
+    }
+    vp.Point = function(x, y) {
+        return new Point(this, x, y);
+    };
+    Point.prototype.reset = function(x, y) {
         this.x = x;
         this.y = y;
     };
-    VIS.Point.prototype = function() {
-        var proto = {};
-        proto.reset = function(x, y) {
-            this.x = x;
-            this.y = y;
-        };
-        return proto;
-    }();
-    VIS.Vec2D = function(x, y) {
+    function Vec2D(instance, x, y) {
+        this._inst = instance;
         this.x = x;
         this.y = y;
+    }
+    vp.Vec2D = function(x, y) {
+        return new Vec2D(this, x, y);
     };
-    VIS.Vec2D.prototype = function() {
-        var proto = VIS.Point.prototype;
-        proto.add = function(pt) {
-            this.x += pt.x;
-            this.y += pt.y;
-        };
-        proto.rot = function(pt) {
-            this.x *= pt.x;
-            this.y *= pt.y;
-        };
-        return proto;
-    }();
-    VIS.Particle = function(loc, vel, acc) {
+    Vec2D.prototype.add = function(pt) {
+        this.x += pt.x;
+        this.y += pt.y;
+    };
+    Vec2D.prototype.rot = function(pt) {
+        this.x *= pt.x;
+        this.y *= pt.y;
+    };
+    function Particle(instance, loc, vel, acc) {
+        this._inst = instance;
         this.loc = loc;
         this.vel = vel;
         this.acc = acc;
+    }
+    vp.Particle = function(loc, vel, acc) {
+        return new Particle(this, loc, vel, acc);
     };
-    VIS.Particle.prototype = function() {
-        var proto = {};
-        proto.loc = function(loc) {
-            if (arguments.length === 0) return this.loc;
-            this.loc = loc;
-        };
-        proto.vel = function(vel) {
-            if (arguments.length === 0) return this.vel;
-            this.vel = vel;
-        };
-        proto.acc = function(acc) {
-            if (arguments.length === 0) return this.acc;
-            this.acc = acc;
-        };
-        proto.update = function() {
-            this.vel.add(this.acc);
-            this.loc.add(this.vel);
-        };
-        proto.draw = function() {
-            VIS.circle(this.loc.x, this.loc.y, 1);
-        };
-        proto.inView = function() {
-            return this.loc.x >= 0 && this.loc.x <= VIS.width && this.loc.y >= 0 && this.loc.y <= VIS.height;
-        };
-        return proto;
-    }();
-    VIS.Triangle = function(a, b, c) {
+    Particle.prototype.loc = function(loc) {
+        if (arguments.length === 0) return this.loc;
+        this.loc = loc;
+    };
+    Particle.prototype.vel = function(vel) {
+        if (arguments.length === 0) return this.vel;
+        this.vel = vel;
+    };
+    Particle.prototype.acc = function(acc) {
+        if (arguments.length === 0) return this.acc;
+        this.acc = acc;
+    };
+    Particle.prototype.update = function() {
+        this.vel.add(this.acc);
+        this.loc.add(this.vel);
+    };
+    Particle.prototype.draw = function() {
+        this._inst.circle(this.loc.x, this.loc.y, 1);
+    };
+    Particle.prototype.inView = function() {
+        return this.loc.x >= 0 && this.loc.x <= this._inst.width && this.loc.y >= 0 && this.loc.y <= this._inst.height;
+    };
+    function Triangle(instance, a, b, c) {
+        this._inst = instance;
+        this.a = a;
+        this.b = b;
+        this.c = c;
+    }
+    vp.Triangle = function(a, b, c) {
+        return new Triangle(this, a, b, c);
+    };
+    Triangle.prototype.reset = function(a, b, c) {
         this.a = a;
         this.b = b;
         this.c = c;
     };
-    VIS.Triangle.prototype = function() {
-        var proto = {};
-        proto.reset = function(a, b, c) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-        };
-        proto.draw = function() {
-            VIS.triangle(this.a.x, this.a.y, this.b.x, this.b.y, this.c.x, this.c.y);
-        };
-        return proto;
-    }();
-    VIS.Polygon = function() {
+    Triangle.prototype.draw = function() {
+        this._inst.triangle(this.a.x, this.a.y, this.b.x, this.b.y, this.c.x, this.c.y);
+    };
+    function Polygon(instance) {
+        this._inst = instance;
+        this.vertices = [];
+    }
+    vp.Polygon = function() {
+        return new Polygon(this);
+    };
+    Polygon.prototype.vertex = function(x, y) {
+        if (arguments.length === 1) this.vertices.push(x); else this.vertices.push(new Point(x, y));
+    };
+    Polygon.prototype.clear = function() {
         this.vertices = [];
     };
-    VIS.Polygon.prototype = function() {
-        var proto = {};
-        proto.vertex = function(x, y) {
-            if (arguments.length === 1) this.vertices.push(x); else this.vertices.push(new Point(x, y));
-        };
-        proto.clear = function() {
-            this.vertices = [];
-        };
-        proto.draw = function(open) {
-            ctx.beginPath();
-            ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
-            for (var i = 1, l = this.vertices.length; i < l; ++i) {
-                ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
-            }
-            if (open !== "open") ctx.closePath();
-            if (VIS._stroke) ctx.stroke();
-            if (VIS._fill) ctx.fill();
-        };
-        return proto;
-    }();
-    VIS.random = function(low, high) {
+    Polygon.prototype.draw = function(open) {
+        this._inst.ctx.beginPath();
+        this._inst.ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
+        for (var i = 1, l = this.vertices.length; i < l; ++i) {
+            this._inst.ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
+        }
+        if (open !== "open") this._inst.ctx.closePath();
+        if (this._inst._stroke) this._inst.ctx.stroke();
+        if (this._inst._fill) this._inst.ctx.fill();
+    };
+    vp.random = function(low, high) {
         if (arguments.length === 0) return Math.random(); else if (arguments.length === 1) high = low, 
         low = 0;
         return Math.random() * (high - low) + low;
     };
-    VIS.noise = function(x, y, z) {
+    vp.noise = function(x, y, z) {
         if (arguments.length === 2) return perlin2D(x, y);
         if (arguments.length === 3) return perlin3D(x, y, z);
     };
@@ -590,38 +587,38 @@
         }
         return 32 * (n0 + n1 + n2 + n3);
     };
-    VIS.slice = Array.prototype.slice;
-    VIS.bind = function(func, context) {
-        if (!VIS.isFunction(func)) throw new TypeError("passed a non-function to bind");
-        var args = VIS.slice.call(arguments, 2);
+    vp.slice = Array.prototype.slice;
+    vp.bind = function(func, context) {
+        if (!vp.isFunction(func)) throw new TypeError("passed a non-function to bind");
+        var args = vp.slice.call(arguments, 2);
         return function() {
-            func.apply(context, args.concat(VIS.slice.call(arguments)));
+            func.apply(context, args.concat(vp.slice.call(arguments)));
         };
     };
-    VIS.bindAll = function(context) {
-        var funcs = VIS.isArray(arguments[1]) ? arguments[1] : VIS.slice.call(arguments, 1), i = funcs.length;
+    vp.bindAll = function(context) {
+        var funcs = vp.isArray(arguments[1]) ? arguments[1] : vp.slice.call(arguments, 1), i = funcs.length;
         while (i--) {
-            context[funcs[i]] = VIS.bind(context[funcs[i]], context);
+            context[funcs[i]] = vp.bind(context[funcs[i]], context);
         }
         return context;
     };
-    VIS.isArray = function(candidate) {
+    vp.isArray = function(candidate) {
         return Object.prototype.toString.call(candidate) === "[object Array]";
     };
-    VIS.isObject = function(candidate) {
+    vp.isObject = function(candidate) {
         return candidate === Object(candidate);
     };
-    VIS.isFunction = function(candidate) {
+    vp.isFunction = function(candidate) {
         return typeof candidate === "function";
     };
-    VIS.isUndefined = function(candidate) {
+    vp.isUndefined = function(candidate) {
         return candidate === void 0;
     };
-    VIS.extend = function(obj, overwrite) {
+    vp.extend = function(obj, overwrite) {
         if (typeof overwrite === "boolean") {
-            var args = VIS.slice.call(arguments, 2);
+            var args = vp.slice.call(arguments, 2);
         } else {
-            var args = VIS.slice.call(arguments, 1);
+            var args = vp.slice.call(arguments, 1);
             overwrite = false;
         }
         var i = -1, l = args.length, source;
@@ -635,83 +632,79 @@
         }
         return obj;
     };
-    VIS.functions = function(obj) {
+    vp.functions = function(obj) {
         var funcs = [];
         for (var key in obj) {
-            if (VIS.isFunctions(obj[key])) funcs.push(key);
+            if (vp.isFunction(obj[key])) funcs.push(key);
         }
         return funcs.sort();
     };
     var usefulMath = "PI abs acos asin atan atan2 ceil cos floor max min pow round sin sqrt tan".split(" "), i = usefulMath.length, prop;
     while (i--) {
         prop = usefulMath[i];
-        VIS[prop] = Math[prop];
+        vp[prop] = Math[prop];
     }
-    VIS.lerp = function(low, high, amount) {
+    vp.lerp = function(low, high, amount) {
         return low + amount * (high - low);
     };
-    VIS.clamp = function(x, bot, top) {
+    vp.clamp = function(x, bot, top) {
         x = Math.min(top, Math.max(bot, parseFloat(x)));
         if (Math.abs(x - top) < 1e-6) return top; else if (Math.abs(x - bot) < 1e-6) return bot; else return x;
     };
     VIS.Events = function() {
         this._handlers = {};
     };
-    VIS.Events.prototype = function() {
-        var api = {};
-        api.on = function(name, response, context) {
-            var list = this._handlers[name] || this._handlers[name] = [];
+    VIS.Events.prototype.on = function(name, response, context) {
+        var list = this._handlers[name] || this._handlers[name] = [];
+        var i = list.length;
+        while (i--) if (list[i].fn === response) return false;
+        list.push({
+            fn: response,
+            cx: context || this
+        });
+        return true;
+    };
+    VIS.Events.prototype.once = function(name, response, context) {
+        var self = this;
+        var once = function() {
+            self.off(name, once);
+            response.apply(this, arguments);
+        };
+        this.on(name, once, context);
+        return true;
+    };
+    VIS.Events.prototype.trigger = function(name) {
+        var list = this._handlers[name];
+        if (list) {
+            var args = VIS.slice.call(arguments, 1), info, i = -1, l = list.length;
+            while (++i < l) (info = list[i]).fn.apply(info.cx, args);
+        }
+        return true;
+    };
+    VIS.Events.prototype.off = function(name, response) {
+        if (!response) {
+            return delete this._handlers[name];
+        }
+        var list = this._handlers[name];
+        if (list) {
             var i = list.length;
-            while (i--) if (list[i].fn === response) return false;
-            list.push({
-                fn: response,
-                cx: context || this
-            });
-            return true;
-        };
-        api.once = function(name, response, context) {
-            var self = this;
-            var once = function() {
-                self.off(name, once);
-                response.apply(this, arguments);
-            };
-            this.on(name, once, context);
-            return true;
-        };
-        api.trigger = function(name) {
-            var list = this._handlers[name];
-            if (list) {
-                var args = VIS.slice.call(arguments, 1), info, i = -1, l = list.length;
-                while (++i < l) (info = list[i]).fn.apply(info.cx, args);
+            while (i--) {
+                if (list[i].fn === response) list.splice(i, 1);
             }
             return true;
-        };
-        api.off = function(name, response) {
-            if (!response) {
-                return delete this._handlers[name];
-            }
-            var list = this._handlers[name];
-            if (list) {
-                var i = list.length;
-                while (i--) {
-                    if (list[i].fn === response) list.splice(i, 1);
-                }
-                return true;
-            }
-        };
-        return api;
-    }();
-    VIS.rgbToHex = function(r, g, b) {
+        }
+    };
+    vp.rgbToHex = function(r, g, b) {
         r = r.toString(16), g = g.toString(16), b = b.toString(16);
         if (r.length < 2) r = "0" + r;
         if (g.length < 2) g = "0" + g;
         if (b.length < 2) b = "0" + b;
         return "#" + r + g + b;
     };
-    VIS.rgbToHsv = function(r, g, b) {
-        r = VIS.clamp(r, 0, 255) / 255;
-        g = VIS.clamp(g, 0, 255) / 255;
-        b = VIS.clamp(b, 0, 255) / 255;
+    vp.rgbToHsv = function(r, g, b) {
+        r = vp.clamp(r, 0, 255) / 255;
+        g = vp.clamp(g, 0, 255) / 255;
+        b = vp.clamp(b, 0, 255) / 255;
         var max = Math.max(r, g, b), min = Math.min(r, g, b);
         var h, s, v = max;
         var d = max - min;
@@ -740,7 +733,7 @@
             v: v
         };
     };
-    VIS.hexToRgb = function(hex) {
+    vp.hexToRgb = function(hex) {
         if (hex.length === 4) {
             return {
                 r: parseInt(hex.substr(1, 1), 16),
@@ -755,13 +748,13 @@
             };
         }
     };
-    VIS.hexToHsv = function(hex) {
-        return VIS.rgbToHsv(VIS.hexToRgb(hex));
+    vp.hexToHsv = function(hex) {
+        return vp.rgbToHsv(vp.hexToRgb(hex));
     };
-    VIS.hsvToRgb = function(h, s, v) {
-        h = VIS.clamp(h, 360) / 360 * 6;
-        s = VIS.clamp(s, 100) / 100;
-        v = VIS.clamp(v, 100) / 100;
+    vp.hsvToRgb = function(h, s, v) {
+        h = vp.clamp(h, 360) / 360 * 6;
+        s = vp.clamp(s, 100) / 100;
+        v = vp.clamp(v, 100) / 100;
         var i = Math.floor(h), f = h - i, p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s), mod = i % 6, r = [ v, q, p, p, t, v ][mod], g = [ t, v, v, q, p, p ][mod], b = [ p, p, t, v, v, q ][mod];
         return {
             r: r * 255,
