@@ -33,8 +33,7 @@
 	<script>
 		// sketch code goes here
 		
-		VIS.install();
-		setCanvas(document.getElementById("testCanvas"));
+		var sketch = new VIS("#testCanvas", { global: true });
 
 		var w = 600;
 		var h = 600;
