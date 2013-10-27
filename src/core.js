@@ -42,10 +42,9 @@
 // Binds all prototype methods to the new object
 // optionally makes all properties of VIS globals (for processing sketch-style apps)
 var VIS = function(canvas, options) {
-	this.canvas = canvas || document.createElement("canvas");
-	this.ctx = canvas.getContext("2d");
-	VIS.extend(this, false, options || {}, defaultOpts, initialProps);
-	VIS.bindAll(this, VIS.functions(this));
+	this.setCanvas(canvas || document.createElement("canvas"));
+	vp.extend(this, false, options || {}, defaultOpts, initialProps);
+	vp.bindAll(this, vp.functions(this));
 
 	if (options.augment || options.global) {
 		for (var name in this) {
@@ -60,24 +59,22 @@ var VIS = function(canvas, options) {
 	document.addEventListener("keydown", this.keyDown);
 	document.addEventListener("keyup", this.keyUp);
 	// sugar for user-defined event handlers
-	if (this.isFunction(root.click)) this.canvas.addEventListener("click", root.click);
-	if (this.isFunction(root.mousedown)) this.canvas.addEventListener("mousedown", root.mousedown);
-	if (this.isFunction(root.mouseup)) this.canvas.addEventListener("mouseup", root.mouseup);
-	if (this.isFunction(root.move)) this.canvas.addEventListener("mousemove", root.move);
-	if (this.isFunction(root.key)) document.addEventListener("keydown", root.key);
+	if (vp.isFunction(root.click)) this.canvas.addEventListener("click", root.click);
+	if (vp.isFunction(root.mousedown)) this.canvas.addEventListener("mousedown", root.mousedown);
+	if (vp.isFunction(root.mouseup)) this.canvas.addEventListener("mouseup", root.mouseup);
+	if (vp.isFunction(root.move)) this.canvas.addEventListener("mousemove", root.move);
+	if (vp.isFunction(root.key)) document.addEventListener("keydown", root.key);
 	// sugar for user-defined setup/update/draw loop
-	if (this.isFunction(root.setup)) root.setup();
+	if (vp.isFunction(root.setup)) requestAnimationFrame(root.setup);
 	// run these at least once
-	if (this.isFunction(root.update)) root.update();
-	if (this.isFunction(root.draw)) root.draw();	
+	if (vp.isFunction(root.update)) requestAnimationFrame(root.update);
+	if (vp.isFunction(root.draw)) requestAnimationFrame(root.draw);	
 
 	// TODO: create Ticker, based on EaselJS, which has a framerate setter and which can be listened to
 	// TODO: include RAF polyfill
 	// TODO: throttle loop speed to some framerate
 
 	requestAnimationFrame(this.internalLoop);
-
-	return options.augment ? this.ctx : options.global ? root : this;
 };
 
 // helper variables
@@ -133,8 +130,8 @@ if (typeof define === 'function' && define.amd) {
 
 vp.internalLoop = function() {
 	if (this._isLooping) {
-		if (isFunction(root.update)) root.update();
-		if (isFunction(root.draw)) root.draw();
+		if (vp.isFunction(root.update)) root.update();
+		if (vp.isFunction(root.draw)) root.draw();
 	}
 
 	requestAnimationFrame(this.internalLoop);

@@ -24,10 +24,12 @@
 	</body>
 
 	<script>
+		// constants
+		var TWO_PI = 2 * Math.PI,
+			PI = Math.PI;
+
 		// epitrochoid implementation
-		
-		VIS.install();
-		setCanvas(document.getElementById("testCanvas"));
+		var sketch = new VIS("#testCanvas", { global: true });
 		size(document.width - 16, document.height - 16);
 
 		strokeWidth(2);
@@ -82,7 +84,7 @@
 		var app, trace;
 		function newApp() {
 			app = new Epitrochoid(width / 2, height / 2, innerR, outerR, ptR);
-			trace = new Polygon();
+			trace = Polygon();
 		}
 
 		function setup() {
@@ -91,7 +93,7 @@
 			background(0);
 			stroke(255);
 
-			var shape = new Polygon();
+			var shape = Polygon();
 			var initialPos = app.getDotPos();
 			var turns = 0;
 			var i = 0;
@@ -180,10 +182,11 @@
 			};
 
 			this.getDotPos = function() {
-				return {
+				var pt = {
 					x: this.outer.x + Math.cos(this.outer.rot) * this.ptR,
 					y: this.outer.y + Math.sin(this.outer.rot) * this.ptR
 				};
+				return pt;
 			};
 		}
 

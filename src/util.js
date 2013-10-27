@@ -6,7 +6,7 @@ vp.bind = function(func, context) {
 	if (!vp.isFunction(func)) throw new TypeError("passed a non-function to bind");
 	var args = vp.slice.call(arguments, 2);
 	return function() {
-		func.apply(context, args.concat(vp.slice.call(arguments)));
+		return func.apply(context, args.concat(vp.slice.call(arguments)));
 	};
 };
 
