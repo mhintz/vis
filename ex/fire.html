@@ -28,8 +28,7 @@
 		// work on a fire algorithm, as explained HERE: http://www.gamedev.net/page/resources/_/technical/graphics-programming-and-theory/simple-fire-effect-r222
 		// AND HERE: https://www.google.com/search?q=fire+algorithm&oq=fire+algorithm&aqs=chrome..69i57j0l3.1783j0&sourceid=chrome&ie=UTF-8
 
-		VIS.install();
-		setCanvas(document.getElementById("testCanvas"));
+		var sketch = new VIS("#testCanvas", { global: true });
 
 		size(600, 600);
 
