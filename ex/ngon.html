@@ -26,9 +26,10 @@
 	<script>
 		// sketch code goes here
 		
-		VIS.install();
-		setCanvas(document.getElementById("testCanvas"));
+		var sketch = new VIS("#testCanvas", { global: true });
 		size(document.width - 16, document.height - 16);
+
+		var TWO_PI = 2 * Math.PI;
 
 		strokeWidth(2);
 		lineCap("round");
@@ -55,7 +56,7 @@
 		function setup() {
 			background(0);
 
-			var poly = new Polygon();
+			var poly = Polygon();
 
 			var inc = TWO_PI / n;
 			var x, y, a = 0;

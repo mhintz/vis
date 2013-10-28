@@ -104,7 +104,7 @@
         }
         requestAnimationFrame(this.internalLoop);
     };
-    this.setMousePos = function(e) {
+    vp.setMousePos = function(e) {
         this.mouseX = e.clientX;
         this.mouseY = e.clientY;
         if (this._installed) {
@@ -112,7 +112,7 @@
             root.mouseY = e.clientY;
         }
     };
-    this.keyDown = function(e) {
+    vp.keyDown = function(e) {
         var code = !vp.isUndefined(e.keyCode) ? e.keyCode : e.charCode;
         var key = vp.keyDict[code] || String.fromCharCode(code);
         this.keyPressed = key;
@@ -120,7 +120,7 @@
             root.keyPressed = key;
         }
     };
-    this.keyUp = function() {
+    vp.keyUp = function() {
         this.keyPressed = null;
         if (this._installed) {
             root.keyPressed = null;

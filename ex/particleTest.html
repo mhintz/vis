@@ -22,8 +22,9 @@
 	<script>
 		// sketch code goes here
 		
-		VIS.install();
-		setCanvas(document.getElementById("testCanvas"));
+		var sketch = new VIS("#testCanvas", { global: true });
+
+		var TWO_PI = 2 * Math.PI;
 
 		size(500, 500);
 

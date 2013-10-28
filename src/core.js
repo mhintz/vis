@@ -137,7 +137,7 @@ vp.internalLoop = function() {
 	requestAnimationFrame(this.internalLoop);
 }
 
-this.setMousePos = function(e) {
+vp.setMousePos = function(e) {
 	this.mouseX = e.clientX;
 	this.mouseY = e.clientY;
 	if (this._installed) {
@@ -146,7 +146,7 @@ this.setMousePos = function(e) {
 	}
 }
 
-this.keyDown = function(e) {
+vp.keyDown = function(e) {
 	var code = !vp.isUndefined(e.keyCode) ? e.keyCode : e.charCode;
 	var key = vp.keyDict[code] || String.fromCharCode(code);
 	this.keyPressed = key;
@@ -155,7 +155,7 @@ this.keyDown = function(e) {
 	}
 }
 
-this.keyUp = function() {
+vp.keyUp = function() {
 	this.keyPressed = null;
 	if (this._installed) {
 		root.keyPressed = null;
