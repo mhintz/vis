@@ -37,8 +37,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
     var VIS = function(canvas, options) {
+        options = options || {};
         this.setCanvas(canvas || document.createElement("canvas"));
-        vp.extend(this, false, options || {}, defaultOpts, initialProps);
+        vp.extend(this, false, options, defaultOpts, initialProps);
         vp.bindAll(this, vp.functions(this));
         if (options.augment || options.global) {
             for (var name in this) {
@@ -773,9 +774,9 @@
         return new RawPixels(this, x, y, w, h);
     };
     vp.NewImage = function(width, height) {
-        if (vp.isUndefined(width)) width = this._inst.width;
-        if (vp.isUndefined(height)) height = this._inst.height;
-        return this._inst.ctx.createImageData(width, height);
+        if (vp.isUndefined(width)) width = this.width;
+        if (vp.isUndefined(height)) height = this.height;
+        return this.ctx.createImageData(width, height);
     };
     RawPixels.prototype.getImg = function() {
         this.img = this._inst.ctx.getImageData(this.x, this.y, this.w, this.h);

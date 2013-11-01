@@ -42,8 +42,9 @@
 // Binds all prototype methods to the new object
 // optionally makes all properties of VIS globals (for processing sketch-style apps)
 var VIS = function(canvas, options) {
+	options = options || {};
 	this.setCanvas(canvas || document.createElement("canvas"));
-	vp.extend(this, false, options || {}, defaultOpts, initialProps);
+	vp.extend(this, false, options, defaultOpts, initialProps);
 	vp.bindAll(this, vp.functions(this));
 
 	if (options.augment || options.global) {

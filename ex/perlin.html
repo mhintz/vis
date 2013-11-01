@@ -24,33 +24,38 @@
 	</head>
 	<body>
 
-		<h1>A Square of Simplex Perlin Noise</h2>
+		<h1>Perlin Simplex Noise</h2>
 
-		<canvas id="testCanvas"></canvas>
+		<canvas id="perlinCanvas"></canvas>
+
+		<h1>vs. Math.random() Noise</h2>
+
+		<canvas id="randomCanvas"></canvas>
 
 	</body>
 
 	<script>
 		// sketch code goes here
 		
-		var sketch = new VIS("#testCanvas", { global: true });
+		var perlin = new VIS("#perlinCanvas");
 
 		var w = 600;
 		var h = 600;
-		size(w, h);
+		perlin.size(w, h);
 
-		var rawPixelImg = new RawPixels();
-
+		var rawPixelImg = new perlin.RawPixels();
 		var px = rawPixelImg.getPx();
+
+		var newPixelBuffer = new perlin.NewImage();
 
 		var rowLen = 4 * w;
 
+		// draw a square of perlin noise
 		var x, y, rand;
 		for (var i = 0, l = px.length; i < l; i += 4) {
 			x = ((i / 4) % 600) + 1;
 			y = Math.ceil((i / 4) / 600) + 1;
-			rand = Math.round(noise(x, y) * 255);
-//			rand = Math.round(Math.random() * 255);
+			rand = Math.round(perlin.noise(x, y) * 255);
 			px[i] = rand;
 			px[i + 1] = rand;
 			px[i + 2] = rand;
@@ -61,17 +66,63 @@
 		// smooth
 		for (var i = 0, l = px.length; i < l; i += 4) {
 			var l, t, r, b, avgVal;
-			l = px[i - 4] || 0;
+			lt = px[i - 4 - rowLen] || 0;
 			t = px[i - rowLen] || 0;
+			rt = px[i + 4 - rowLen] || 0;
+			l = px[i - 4] || 0;
 			r = px[i + 4] || 0;
+			lb = px[i - 4 + rowLen] || 0;
 			b = px[i + rowLen] || 0;
+			lr = px[i + 4 + rowLen] || 0;
 
 			avgVal = avg(l, t, r, b);
-			px[i] = avgVal;
-			px[i + 1] = avgVal;
-			px[i + 2] = avgVal;
+			newPixelBuffer[i] = newPixelBuffer[i + 1] = newPixelBuffer[i + 2] = avgVal;
 		}
 
+		rawPixelImg.setPx(newPixelBuffer);
+		
+		// the same code, using Math.random()
+		var random = new VIS("#randomCanvas");
+		random.size(w, h);
+
+		var rawPixelImg = new random.RawPixels();
+		var px = rawPixelImg.getPx();
+
+		var newPixelBuffer = new random.NewImage();
+
+		var rowLen = 4 * w;
+
+		var x, y, rand;
+		for (var i = 0, l = px.length; i < l; i += 4) {
+			x = ((i / 4) % 600) + 1;
+			y = Math.ceil((i / 4) / 600) + 1;
+			rand = Math.round(random.random() * 255);
+			px[i] = rand;
+			px[i + 1] = rand;
+			px[i + 2] = rand;
+			// alpha channel
+			px[i + 3] = 255;
+		}
+
+		// smooth
+		for (var i = 0, l = px.length; i < l; i += 4) {
+			var l, t, r, b, avgVal;
+			lt = px[i - 4 - rowLen] || 0;
+			t = px[i - rowLen] || 0;
+			rt = px[i + 4 - rowLen] || 0;
+			l = px[i - 4] || 0;
+			r = px[i + 4] || 0;
+			lb = px[i - 4 + rowLen] || 0;
+			b = px[i + rowLen] || 0;
+			lr = px[i + 4 + rowLen] || 0;
+
+			avgVal = avg(l, t, r, b);
+			newPixelBuffer[i] = newPixelBuffer[i + 1] = newPixelBuffer[i + 2] = avgVal;
+		}
+
+		rawPixelImg.setPx(newPixelBuffer);
+
+		// averages its arguments
 		function avg() {
 			var avg = 0;
 			for (var i = 0, l = arguments.length; i < l; ++i) {
@@ -79,10 +130,6 @@
 			}
 			return avg;
 		}
-
-		rawPixelImg.draw();
-//		rawPixelImg.setPx(px);
-
 
 	</script>
 </html>

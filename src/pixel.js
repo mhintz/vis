@@ -13,9 +13,9 @@ vp.RawPixels = function(x, y, w, h) {
 };
 
 vp.NewImage = function(width, height) {
-	if (vp.isUndefined(width)) width = this._inst.width;
-	if (vp.isUndefined(height)) height = this._inst.height;
-	return this._inst.ctx.createImageData(width, height);
+	if (vp.isUndefined(width)) width = this.width;
+	if (vp.isUndefined(height)) height = this.height;
+	return this.ctx.createImageData(width, height);
 };
 
 RawPixels.prototype.getImg = function() {
