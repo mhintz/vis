@@ -1,4 +1,12 @@
 /*** COLOR UTILITIES ***/
+vp.isColor = function(str) {
+    if (typeof str !== "string") return false;
+    if (str[0] === "#" && (str.length === 4 || str.length === 7)) return true;
+    var split = str.split(new RegExp("\\(|,|\\)"));
+    if (split[0].slice(0, 3) === "rgb" && parseInt(split[1]) && parseInt(split[2]) && parseInt(split[3])) return true;
+    return false;
+};
+
 vp.rgbToHex = function(r, g, b) {
 	r = r.toString(16), g = g.toString(16), b = b.toString(16);
 	if (r.length < 2) r = "0" + r;

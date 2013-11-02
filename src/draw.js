@@ -12,9 +12,14 @@ vp.background = function(r, g, b) {
 };
 
 vp.stroke = function(r, g, b) {
-	if (arguments.length === 1) g = b = r;
-	this.ctx.strokeStyle = vp.rgbToHex(r, g, b);
-	this._stroke = true;
+	var color;
+	if (arguments.length === 1) {
+		if (vp.isColor(r)) color = r;
+		else if (typeof r === "number") color = vp.rgbToHex(r, r, r);
+	} else {
+		color = vp.rgbToHex(r, g, b);
+	}
+	if (this._stroke = !!color) this.ctx.strokeStyle = color;
 };
 
 vp.strokeWidth = function(w) {

@@ -201,9 +201,13 @@
         this.ctx.fillStyle = _fill;
     };
     vp.stroke = function(r, g, b) {
-        if (arguments.length === 1) g = b = r;
-        this.ctx.strokeStyle = vp.rgbToHex(r, g, b);
-        this._stroke = true;
+        var color;
+        if (arguments.length === 1) {
+            if (vp.isColor(r)) color = r; else if (typeof r === "number") color = vp.rgbToHex(r, r, r);
+        } else {
+            color = vp.rgbToHex(r, g, b);
+        }
+        if (this._stroke = !!color) this.ctx.strokeStyle = color;
     };
     vp.strokeWidth = function(w) {
         this.ctx.lineWidth = w;
@@ -648,51 +652,12 @@
         x = Math.min(top, Math.max(bot, parseFloat(x)));
         if (Math.abs(x - top) < 1e-6) return top; else if (Math.abs(x - bot) < 1e-6) return bot; else return x;
     };
-    function Events() {
-        this._handlers = {};
-    }
-    VIS.Events = function() {
-        return new Events();
-    };
-    Events.prototype.on = function(name, response, context) {
-        var list = this._handlers[name] || this._handlers[name] = [];
-        var i = list.length;
-        while (i--) if (list[i].fn === response) return false;
-        list.push({
-            fn: response,
-            cx: context || this
-        });
-        return true;
-    };
-    Events.prototype.once = function(name, response, context) {
-        var self = this;
-        var once = function() {
-            self.off(name, once);
-            response.apply(this, arguments);
-        };
-        this.on(name, once, context);
-        return true;
-    };
-    Events.prototype.trigger = function(name) {
-        var list = this._handlers[name];
-        if (list) {
-            var args = vp.slice.call(arguments, 1), info, i = -1, l = list.length;
-            while (++i < l) (info = list[i]).fn.apply(info.cx, args);
-        }
-        return true;
-    };
-    Events.prototype.off = function(name, response) {
-        if (!response) {
-            return delete this._handlers[name];
-        }
-        var list = this._handlers[name];
-        if (list) {
-            var i = list.length;
-            while (i--) {
-                if (list[i].fn === response) list.splice(i, 1);
-            }
-            return true;
-        }
+    vp.isColor = function(str) {
+        if (typeof str !== "string") return false;
+        if (str[0] === "#" && (str.length === 4 || str.length === 7)) return true;
+        var split = str.split(new RegExp("\\(|,|\\)"));
+        if (split[0].slice(0, 3) === "rgb" && parseInt(split[1]) && parseInt(split[2]) && parseInt(split[3])) return true;
+        return false;
     };
     vp.rgbToHex = function(r, g, b) {
         r = r.toString(16), g = g.toString(16), b = b.toString(16);
@@ -802,5 +767,51 @@
     };
     RawPixels.prototype.draw = function() {
         this._inst.ctx.putImageData(this.img, this.x, this.y);
+    };
+    function Events() {
+        this._handlers = {};
+    }
+    VIS.Events = function() {
+        return new Events();
+    };
+    Events.prototype.on = function(name, response, context) {
+        var list = this._handlers[name] || this._handlers[name] = [];
+        var i = list.length;
+        while (i--) if (list[i].fn === response) return false;
+        list.push({
+            fn: response,
+            cx: context || this
+        });
+        return true;
+    };
+    Events.prototype.once = function(name, response, context) {
+        var self = this;
+        var once = function() {
+            self.off(name, once);
+            response.apply(this, arguments);
+        };
+        this.on(name, once, context);
+        return true;
+    };
+    Events.prototype.trigger = function(name) {
+        var list = this._handlers[name];
+        if (list) {
+            var args = vp.slice.call(arguments, 1), info, i = -1, l = list.length;
+            while (++i < l) (info = list[i]).fn.apply(info.cx, args);
+        }
+        return true;
+    };
+    Events.prototype.off = function(name, response) {
+        if (!response) {
+            return delete this._handlers[name];
+        }
+        var list = this._handlers[name];
+        if (list) {
+            var i = list.length;
+            while (i--) {
+                if (list[i].fn === response) list.splice(i, 1);
+            }
+            return true;
+        }
     };
 })();

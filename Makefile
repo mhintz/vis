@@ -1,5 +1,5 @@
 MAIN_MODULE=core.js
-SUB_MODULES=draw.js shape.js rand.js util.js events.js color.js pixel.js
+SUB_MODULES=draw.js data.js shape.js rand.js util.js color.js pixel.js events.js
 LOCATIONS=$(patsubst %, src/%, $(MAIN_MODULE) $(SUB_MODULES))
 
 TARGETS=bin/vis.js bin/vis.min.js
