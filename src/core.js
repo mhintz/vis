@@ -1,7 +1,7 @@
 /**
  * @preserve
  * VIS.js, a library for creative coding in the browser
- * Version 0.0.1
+ * Version 0.1.0
  * Written as a personal exercise in coding, to better understand good API construction and use,
  * to learn more about canvas and rendering, and to give me something to use for my own explorations.
  * Tons of inspiration (and actual code) taken from the following excellent libraries:
@@ -83,7 +83,7 @@ var vp = VIS.prototype;
 // root object
 var root = this;
 
-VIS.VERSION = "0.0.1";
+VIS.VERSION = "0.1.0";
 
 var defaultOpts = {
 	augment: false,
