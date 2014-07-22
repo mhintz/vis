@@ -2,7 +2,7 @@
     /**
  * @preserve
  * VIS.js, a library for creative coding in the browser
- * Version 0.0.1
+ * Version 0.1.0
  * Written as a personal exercise in coding, to better understand good API construction and use,
  * to learn more about canvas and rendering, and to give me something to use for my own explorations.
  * Tons of inspiration (and actual code) taken from the following excellent libraries:
@@ -64,7 +64,7 @@
     };
     var vp = VIS.prototype;
     var root = this;
-    VIS.VERSION = "0.0.1";
+    VIS.VERSION = "0.1.0";
     var defaultOpts = {
         augment: false,
         global: false,
@@ -310,6 +310,32 @@
         }
         if (this._stroke) this.ctx.stroke();
         if (this._fill) this.ctx.fill();
+    };
+    function Point(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    vp.Point = function(x, y) {
+        return new Point(x, y);
+    };
+    Point.prototype.reset = function(x, y) {
+        this.x = x;
+        this.y = y;
+    };
+    function Vec2D(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    vp.Vec2D = function(x, y) {
+        return new Vec2D(x, y);
+    };
+    Vec2D.prototype.add = function(pt) {
+        this.x += pt.x;
+        this.y += pt.y;
+    };
+    Vec2D.prototype.rot = function(pt) {
+        this.x *= pt.x;
+        this.y *= pt.y;
     };
     function Particle(instance, loc, vel, acc) {
         this._inst = instance;
