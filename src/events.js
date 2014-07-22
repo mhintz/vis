@@ -8,7 +8,7 @@ VIS.Events = function() {
 };
 
 Events.prototype.on = function(name, response, context) {
-	var list = this._handlers[name] || this._handlers[name] = [];
+	var list = this._handlers[name] || (this._handlers[name] = []);
 	var i = list.length;
 	while (i--) if (list[i].fn === response) return false;
 	list.push({fn: response, cx: context || this});

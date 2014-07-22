@@ -44,7 +44,7 @@
 var VIS = function(canvas, options) {
 	options = options || {};
 	this.setCanvas(canvas || document.createElement("canvas"));
-	vp.extend(this, false, options, defaultOpts, initialProps);
+	vp.extend(this, initialProps, defaultOpts, options);
 	vp.bindAll(this, vp.functions(this));
 
 	if (options.augment || options.global) {

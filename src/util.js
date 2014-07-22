@@ -1,20 +1,14 @@
 /*** GENERAL UTILITIES ***/
 /* (mostly stolen from underscore) */
-vp.slice = Array.prototype.slice;
-
-vp.bind = function(func, context) {
-	if (!vp.isFunction(func)) throw new TypeError("passed a non-function to bind");
-	var args = vp.slice.call(arguments, 2);
-	return function() {
-		return func.apply(context, args.concat(vp.slice.call(arguments)));
-	};
-};
+vp.slice = Function.prototype.call.bind(Array.prototype.slice); // now you can vp.slice any arguments array
 
 vp.bindAll = function(context) {
-	var funcs = vp.isArray(arguments[1]) ? arguments[1] : vp.slice.call(arguments, 1),
-		i = funcs.length;
+	var funcs = vp.isArray(arguments[1]) ? arguments[1] : vp.slice(arguments, 1),
+		i = funcs.length,
+		f;
 	while (i--) {
-		context[funcs[i]] = vp.bind(context[funcs[i]], context);
+		f = funcs[i];
+		context[f] = context[f].bind(context);
 	}
 	return context;
 };
@@ -36,19 +30,13 @@ vp.isUndefined = function(candidate) {
 };
 
 // extend an object with optional overwriting
-vp.extend = function(obj, overwrite) {
-	if (typeof overwrite === "boolean") {
-		var args = vp.slice.call(arguments, 2);
-	} else {
-		var args = vp.slice.call(arguments, 1);
-		overwrite = false;
-	}
-	var i = -1, l = args.length, source;
-	while (++i < l) {
-		source = args[i];
-		for (var key in source) {
-			if (!(key in obj) || overwrite) {
-				obj[key] = source[key];
+vp.extend = function(obj) {
+	var ext, i, l, p;
+	for (i = 1, l = arguments.length; i < l; ++i) {
+		ext = arguments[i];
+		if (ext) {
+			for (p in ext) {
+				if (ext.hasOwnProperty(p)) obj[p] = ext[p];
 			}
 		}
 	}
@@ -64,16 +52,21 @@ vp.functions = function(obj) {
 };
 
 /*** MATH UTILITIES ***/
-var usefulMath = "PI abs acos asin atan atan2 ceil cos floor max min pow round sin sqrt tan".split(" "),
-	i = usefulMath.length,
-	prop;
-while (i--) {
-	prop = usefulMath[i];
-	vp[prop] = Math[prop];
-}
+(function() {
+	var usefulMath = "PI abs acos asin atan atan2 ceil cos floor max min pow round sin sqrt tan".split(" "),
+		prop;
+	while (prop = usefulMath.pop()) {
+		vp[prop] = Math[prop];
+	}
+})();
 
 vp.lerp = function(low, high, amount) {
 	return low + amount * (high - low);
+};
+
+vp.project = function(v, domLo, domHi, rngLo, rngHi) {
+	var t = (v - domLo) / (domHi - domLo);
+	return vp.lerp(rngLo, rngHi, t);
 };
 
 vp.clamp = function(x, bot, top) {

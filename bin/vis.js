@@ -39,7 +39,7 @@
     var VIS = function(canvas, options) {
         options = options || {};
         this.setCanvas(canvas || document.createElement("canvas"));
-        vp.extend(this, false, options, defaultOpts, initialProps);
+        vp.extend(this, initialProps, defaultOpts, options);
         vp.bindAll(this, vp.functions(this));
         if (options.augment || options.global) {
             for (var name in this) {
@@ -311,32 +311,6 @@
         if (this._stroke) this.ctx.stroke();
         if (this._fill) this.ctx.fill();
     };
-    function Point(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-    vp.Point = function(x, y) {
-        return new Point(x, y);
-    };
-    Point.prototype.reset = function(x, y) {
-        this.x = x;
-        this.y = y;
-    };
-    function Vec2D(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-    vp.Vec2D = function(x, y) {
-        return new Vec2D(x, y);
-    };
-    Vec2D.prototype.add = function(pt) {
-        this.x += pt.x;
-        this.y += pt.y;
-    };
-    Vec2D.prototype.rot = function(pt) {
-        this.x *= pt.x;
-        this.y *= pt.y;
-    };
     function Particle(instance, loc, vel, acc) {
         this._inst = instance;
         this.loc = loc;
@@ -588,18 +562,12 @@
         }
         return 32 * (n0 + n1 + n2 + n3);
     };
-    vp.slice = Array.prototype.slice;
-    vp.bind = function(func, context) {
-        if (!vp.isFunction(func)) throw new TypeError("passed a non-function to bind");
-        var args = vp.slice.call(arguments, 2);
-        return function() {
-            return func.apply(context, args.concat(vp.slice.call(arguments)));
-        };
-    };
+    vp.slice = Function.prototype.call.bind(Array.prototype.slice);
     vp.bindAll = function(context) {
-        var funcs = vp.isArray(arguments[1]) ? arguments[1] : vp.slice.call(arguments, 1), i = funcs.length;
+        var funcs = vp.isArray(arguments[1]) ? arguments[1] : vp.slice(arguments, 1), i = funcs.length, f;
         while (i--) {
-            context[funcs[i]] = vp.bind(context[funcs[i]], context);
+            f = funcs[i];
+            context[f] = context[f].bind(context);
         }
         return context;
     };
@@ -615,19 +583,13 @@
     vp.isUndefined = function(candidate) {
         return candidate === void 0;
     };
-    vp.extend = function(obj, overwrite) {
-        if (typeof overwrite === "boolean") {
-            var args = vp.slice.call(arguments, 2);
-        } else {
-            var args = vp.slice.call(arguments, 1);
-            overwrite = false;
-        }
-        var i = -1, l = args.length, source;
-        while (++i < l) {
-            source = args[i];
-            for (var key in source) {
-                if (!(key in obj) || overwrite) {
-                    obj[key] = source[key];
+    vp.extend = function(obj) {
+        var ext, i, l, p;
+        for (i = 1, l = arguments.length; i < l; ++i) {
+            ext = arguments[i];
+            if (ext) {
+                for (p in ext) {
+                    if (ext.hasOwnProperty(p)) obj[p] = ext[p];
                 }
             }
         }
@@ -640,13 +602,18 @@
         }
         return funcs.sort();
     };
-    var usefulMath = "PI abs acos asin atan atan2 ceil cos floor max min pow round sin sqrt tan".split(" "), i = usefulMath.length, prop;
-    while (i--) {
-        prop = usefulMath[i];
-        vp[prop] = Math[prop];
-    }
+    (function() {
+        var usefulMath = "PI abs acos asin atan atan2 ceil cos floor max min pow round sin sqrt tan".split(" "), prop;
+        while (prop = usefulMath.pop()) {
+            vp[prop] = Math[prop];
+        }
+    })();
     vp.lerp = function(low, high, amount) {
         return low + amount * (high - low);
+    };
+    vp.project = function(v, domLo, domHi, rngLo, rngHi) {
+        var t = (v - domLo) / (domHi - domLo);
+        return vp.lerp(rngLo, rngHi, t);
     };
     vp.clamp = function(x, bot, top) {
         x = Math.min(top, Math.max(bot, parseFloat(x)));
@@ -775,7 +742,7 @@
         return new Events();
     };
     Events.prototype.on = function(name, response, context) {
-        var list = this._handlers[name] || this._handlers[name] = [];
+        var list = this._handlers[name] || (this._handlers[name] = []);
         var i = list.length;
         while (i--) if (list[i].fn === response) return false;
         list.push({
